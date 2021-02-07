@@ -19,10 +19,12 @@ open class BaseDatabaseTest {
     @BeforeEach
     internal open fun setUp() {
         initDatabases()
+        cleanupTables(targetDb, "intermediate_to_child", "child", "intermediate", "main")
     }
 
     @AfterEach
     internal fun tearDown() {
+        targetDb.createStatement().executeUpdate("DROP ALL OBJECTS")
         sourceDb.close()
         targetDb.close()
     }
@@ -39,8 +41,22 @@ open class BaseDatabaseTest {
         sourceDb = DriverManager.getConnection(sourceUrl)!!
         targetDb = DriverManager.getConnection(targetUrl)!!
 
+        sourceDb.autoCommit = true
+        targetDb.autoCommit = true
+
         runLiquibase(sourceDb, "/liquibase/source-changeset.xml")
         runLiquibase(targetDb, "/liquibase/target-changeset.xml")
+    }
+
+    private fun cleanupTables(targetDb: Connection, vararg tables: String) {
+        tables.forEach {
+            val statement = targetDb.createStatement()
+            try {
+                statement.executeUpdate("DELETE FROM $it")
+            } finally {
+                statement.close()
+            }
+        }
     }
 
     private fun runLiquibase(connection: Connection, changeLogPath: String) {

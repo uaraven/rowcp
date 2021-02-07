@@ -3,7 +3,6 @@ package net.ninjacat.rowcp.data
 import net.ninjacat.rowcp.Args
 import net.ninjacat.rowcp.V_NORMAL
 import net.ninjacat.rowcp.log
-import java.io.Closeable
 import java.sql.DriverManager
 
 data class InsertBatch(val statement: String, val data: List<DataRow>)
@@ -35,20 +34,22 @@ class DataInserter(private val args: Args) {
                 runBatch(batch)
                 val pcnt = index * 100 / batches.size
                 if (pcnt - lastPcnt > 10) {
-                    log(V_NORMAL, "Inserted @|blue ${pcnt}$$")
+                    log(V_NORMAL, "Inserted @|blue ${pcnt}|@%")
                     lastPcnt = pcnt
                 }
             }
+            log(V_NORMAL, "Inserted @|blue 100|@%")
             conn.commit()
         } catch (e: Exception) {
             conn.rollback()
             throw e
         }
+        conn.autoCommit = true
     }
 
-    fun runBatch(batch: InsertBatch) {
+    private fun runBatch(batch: InsertBatch) {
         val statement = conn.prepareStatement(batch.statement)
-        (statement as Closeable).use {
+        try {
             batch.data.forEach { row ->
                 row.addParameters(statement)
                 statement.addBatch()
@@ -56,6 +57,8 @@ class DataInserter(private val args: Args) {
             if (!args.dryRun) {
                 statement.executeBatch()
             }
+        } finally {
+            statement.close()
         }
     }
 }

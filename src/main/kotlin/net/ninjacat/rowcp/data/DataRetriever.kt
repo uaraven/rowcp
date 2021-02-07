@@ -53,7 +53,7 @@ data class DataRow(val tableName: String, val columns: List<ColumnData>) {
 
     fun addParameters(statement: PreparedStatement) {
         columns.forEachIndexed { index, column ->
-            column.addParameter(index, statement)
+            column.addParameter(index + 1, statement)
         }
     }
 

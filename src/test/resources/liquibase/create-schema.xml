@@ -11,6 +11,7 @@
       <column name="text" type="varchar(200)">
       </column>
     </createTable>
+
     <createTable tableName="child">
       <column name="first" type="varchar(20)">
         <constraints primaryKey="true"/>
@@ -21,6 +22,7 @@
       <column name="value" type="int"/>
       <column name="updated_on" type="timestamp"/>
     </createTable>
+
     <createTable tableName="intermediate">
       <column name="id" type="int" autoIncrement="true">
         <constraints primaryKey="true"/>
@@ -30,12 +32,14 @@
       <column name="contents" type="varchar(200)"/>
       <column name="time" type="timestamp"/>
     </createTable>
+
     <addForeignKeyConstraint
         constraintName="intermediate_main_fk"
         baseColumnNames="main_id"
         baseTableName="intermediate"
         referencedTableName="main"
         referencedColumnNames="id"/>
+
     <createTable tableName="intermediate_to_child">
       <column name="intermediate_id" type="int">
         <constraints nullable="false"/>
@@ -47,6 +51,7 @@
         <constraints nullable="false"/>
       </column>
     </createTable>
+
     <addUniqueConstraint
         constraintName="intermediate_to_child_unq"
         columnNames="intermediate_id,child_first,child_second" tableName="intermediate_to_child"/>
