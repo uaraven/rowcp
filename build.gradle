@@ -1,0 +1,57 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.kotlin.jvm' version '1.4.30'
+    id 'com.github.johnrengelman.shadow' version '6.1.0'
+    id 'application'
+    id 'antlr'
+}
+
+mainClassName = 'net.ninjacat.dtc.AppKt'
+
+group 'net.ninjacat.dtc'
+version '0.1.0'
+
+repositories {
+    mavenCentral()
+}
+
+ext {
+    antlrVersion = '4.9.1'
+    jansiVersion = '2.2.0'
+    jcommanderVersion = '1.78'
+    mariaDbVersion = '2.7.2'
+    postgresVersion = '42.2.18'
+    h2Version = '1.4.200'
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+
+    antlr "org.antlr:antlr4:$antlrVersion"
+    implementation "org.antlr:antlr4-runtime:$antlrVersion"
+
+    implementation "org.fusesource.jansi:jansi:$jansiVersion"
+    implementation "com.beust:jcommander:$jcommanderVersion"
+
+    implementation "org.mariadb.jdbc:mariadb-java-client:$mariaDbVersion"
+    implementation "org.postgresql:postgresql:$postgresVersion"
+    implementation "com.h2database:h2:$h2Version"
+
+    implementation 'ch.qos.logback:logback-classic:1.2.3'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+    testImplementation "org.assertj:assertj-core:3.18.1"
+}
+
+generateGrammarSource {
+    arguments += ["-visitor"]
+}
+
+test {
+    useJUnitPlatform()
+}
+
+shadowJar {
+    archiveClassifier.set('')
+}
