@@ -1,9 +1,9 @@
-package net.ninjacat.dtc
+package net.ninjacat.rowcp
 
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
-import net.ninjacat.dtc.data.*
-import net.ninjacat.dtc.query.QueryParser
+import net.ninjacat.rowcp.data.*
+import net.ninjacat.rowcp.query.QueryParser
 import org.fusesource.jansi.AnsiConsole
 import org.slf4j.LoggerFactory
 

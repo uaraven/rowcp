@@ -1,10 +1,10 @@
-package net.ninjacat.dtc.data
+package net.ninjacat.rowcp.data
 
-import net.ninjacat.dtc.Args
-import net.ninjacat.dtc.V_NORMAL
-import net.ninjacat.dtc.V_VERBOSE
-import net.ninjacat.dtc.log
-import net.ninjacat.dtc.query.QueryParser
+import net.ninjacat.rowcp.Args
+import net.ninjacat.rowcp.V_NORMAL
+import net.ninjacat.rowcp.V_VERBOSE
+import net.ninjacat.rowcp.log
+import net.ninjacat.rowcp.query.QueryParser
 
 class DataCopier(
     private val args: Args,

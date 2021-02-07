@@ -1,4 +1,4 @@
-package net.ninjacat.dtc
+package net.ninjacat.rowcp
 
 import org.fusesource.jansi.Ansi
 import org.fusesource.jansi.Ansi.ansi

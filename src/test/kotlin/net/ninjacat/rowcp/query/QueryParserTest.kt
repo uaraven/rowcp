@@ -1,4 +1,4 @@
-package net.ninjacat.dtc.query
+package net.ninjacat.rowcp.query
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy

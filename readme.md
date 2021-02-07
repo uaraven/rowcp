@@ -1,3 +1,3 @@
-# Deep Table Copy
+# Row copy
 
-Copies rows from one database to another including all rows from child and parent tables. 
+Performs deep row copying from one database to another. Including all rows from child and parent tables. 

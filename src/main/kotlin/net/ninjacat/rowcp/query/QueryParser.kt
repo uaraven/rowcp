@@ -1,7 +1,7 @@
-package net.ninjacat.dtc.query
+package net.ninjacat.rowcp.query
 
-import net.ninjacat.dtc.RsqlLexer
-import net.ninjacat.dtc.RsqlParser
+import net.ninjacat.rowcp.RsqlLexer
+import net.ninjacat.rowcp.RsqlParser
 import org.antlr.v4.runtime.*
 import org.antlr.v4.runtime.atn.ATNConfigSet
 import org.antlr.v4.runtime.dfa.DFA

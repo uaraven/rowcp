@@ -48,6 +48,9 @@ generateGrammarSource {
     arguments += ["-visitor"]
 }
 
+compileJava.dependsOn generateGrammarSource
+compileKotlin.dependsOn generateGrammarSource
+
 test {
     useJUnitPlatform()
 }

@@ -1,4 +1,4 @@
-package net.ninjacat.dtc.data
+package net.ninjacat.rowcp.data
 
 import java.net.URI
 

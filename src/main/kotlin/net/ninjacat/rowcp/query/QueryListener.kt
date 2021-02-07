@@ -1,7 +1,7 @@
-package net.ninjacat.dtc.query
+package net.ninjacat.rowcp.query
 
-import net.ninjacat.dtc.RsqlBaseListener
-import net.ninjacat.dtc.RsqlParser
+import net.ninjacat.rowcp.RsqlBaseListener
+import net.ninjacat.rowcp.RsqlParser
 
 class QueryListener(private val src: String) : RsqlBaseListener() {
 

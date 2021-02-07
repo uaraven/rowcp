@@ -1,7 +1,7 @@
 grammar Rsql;
 
 @header {
-package net.ninjacat.dtc;
+package net.ninjacat.rowcp;
 }
 
 query: selectStatement ';'? EOF;

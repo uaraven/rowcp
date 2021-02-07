@@ -1,7 +1,7 @@
-package net.ninjacat.dtc.data
+package net.ninjacat.rowcp.data
 
-import net.ninjacat.dtc.*
-import net.ninjacat.dtc.query.Query
+import net.ninjacat.rowcp.*
+import net.ninjacat.rowcp.query.Query
 import java.sql.*
 
 data class ColumnData(val columnName: String, val type: Int, val value: Any?) {
