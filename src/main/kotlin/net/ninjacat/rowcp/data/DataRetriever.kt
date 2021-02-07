@@ -102,7 +102,7 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
         return walk(startingNode, select)
     }
 
-    fun walk(node: TableNode, selectQuery: SelectQuery): List<DataRow> {
+    fun walk(node: Table, selectQuery: SelectQuery): List<DataRow> {
         log(V_NORMAL, "Reading table @|yellow ${node.name}|@")
         val rows = retrieveRows(node.name, selectQuery)
         log(V_VERBOSE, "Retrieved @|yellow ${rows.size}|@ rows")

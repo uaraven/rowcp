@@ -1,0 +1,109 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+  <changeSet id="src-1" author="me">
+    <insert tableName="main">
+      <column name="id" value="1"/>
+      <column name="text" value="text 1"/>
+    </insert>
+    <insert tableName="main">
+      <column name="id" value="2"/>
+      <column name="text" value="text 2"/>
+    </insert>
+    <insert tableName="main">
+      <column name="id" value="3"/>
+      <column name="text" value="text 3"/>
+    </insert>
+  </changeSet>
+
+  <changeSet id="src-2" author="me">
+    <insert tableName="child">
+      <column name="first" value="first 1"/>
+      <column name="second" value="second 1"/>
+      <column name="value" value="1"/>
+      <column name="updated_on" value="NOW()"/>
+    </insert>
+    <insert tableName="child">
+      <column name="first" value="first 2"/>
+      <column name="second" value="second 2"/>
+      <column name="value" value="2"/>
+      <column name="updated_on" value="NOW()"/>
+    </insert>
+    <insert tableName="child">
+      <column name="first" value="first 3"/>
+      <column name="second" value="second 3"/>
+      <column name="value" value="3"/>
+      <column name="updated_on" value="NOW()"/>
+    </insert>
+    <insert tableName="child">
+      <column name="first" value="first 4"/>
+      <column name="second" value="second 4"/>
+      <column name="value" value="4"/>
+      <column name="updated_on" value="NOW()"/>
+    </insert>
+    <insert tableName="child">
+      <column name="first" value="first 5"/>
+      <column name="second" value="second 5"/>
+      <column name="value" value="5"/>
+      <column name="updated_on" value="NOW()"/>
+    </insert>
+  </changeSet>
+
+  <changeSet id="src-3" author="me">
+    <insert tableName="intermediate">
+      <column name="id" value="1"/>
+      <column name="main_id" value="1"/>
+      <column name="contents" value="content 1"/>
+      <column name="time" value="NOW()"/>
+    </insert>
+    <insert tableName="intermediate">
+      <column name="id" value="2"/>
+      <column name="main_id" value="1"/>
+      <column name="contents" value="content 2"/>
+      <column name="time" value="NOW()"/>
+    </insert>
+    <insert tableName="intermediate">
+      <column name="id" value="3"/>
+      <column name="main_id" value="3"/>
+      <column name="contents" value="content 3"/>
+      <column name="time" value="NOW()"/>
+    </insert>
+    <insert tableName="intermediate">
+      <column name="id" value="4"/>
+      <column name="main_id" value="3"/>
+      <column name="contents" value="content 4"/>
+      <column name="time" value="NOW()"/>
+    </insert>
+  </changeSet>
+
+  <changeSet id="src-4" author="me">
+    <insert tableName="intermediate_to_child">
+      <column name="intermediate_id" value="1"/>
+      <column name="child_first" value="first 1"/>
+      <column name="child_second" value="second 1"/>
+    </insert>
+    <insert tableName="intermediate_to_child">
+      <column name="intermediate_id" value="2"/>
+      <column name="child_first" value="first 2"/>
+      <column name="child_second" value="second 2"/>
+    </insert>
+    <insert tableName="intermediate_to_child">
+      <column name="intermediate_id" value="3"/>
+      <column name="child_first" value="first 3"/>
+      <column name="child_second" value="second 3"/>
+    </insert>
+    <insert tableName="intermediate_to_child">
+      <column name="intermediate_id" value="4"/>
+      <column name="child_first" value="first 4"/>
+      <column name="child_second" value="second 4"/>
+    </insert>
+    <insert tableName="intermediate_to_child">
+      <column name="intermediate_id" value="4"/>
+      <column name="child_first" value="first 5"/>
+      <column name="child_second" value="second 5"/>
+    </insert>
+  </changeSet>
+
+</databaseChangeLog>

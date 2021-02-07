@@ -16,31 +16,21 @@ data class ColumnMap(val sourceColumn: String, val targetColumn: String) {
     }
 }
 
-data class RelationshipDirection(val sourceTable: String, val targetTable: String)
-
 data class Relationship(val sourceTable: String, val targetTable: String, val columnMap: List<ColumnMap>)
 
-data class TableNode(
+data class SchemaGraph(
+    val tables: Map<String, Table>
+) {
+
+    fun table(name: String): Table? = tables[name.toLowerCase()]
+}
+
+data class Table(
     val name: String,
     val columns: List<Column>,
     val inbound: Set<Relationship>,
     val outbound: Set<Relationship>
 )
-
-data class SchemaGraph(
-    val tables: Map<String, TableNode>,
-    val relationships: Map<RelationshipDirection, Relationship>
-)
-
-data class Table(
-    val name: String,
-    val columns: List<Column>,
-    val parents: List<Relationship>,
-    val children: List<Relationship>
-) {
-    fun getChildrenForTable(tableName: String): List<Relationship> = children.filter { it.targetTable == tableName }
-    fun getParentsForTable(tableName: String): List<Relationship> = parents.filter { it.targetTable == tableName }
-}
 
 class DbSchema(args: Args) {
 
@@ -50,7 +40,7 @@ class DbSchema(args: Args) {
     fun buildSchemaGraph(): SchemaGraph {
         log(V_NORMAL, "Building source schema graph")
         val resultSet = connection.metaData.getTables(
-            null, null, null, null
+            null, null, null, arrayOf("TABLE")
         )
         val tables: MutableMap<String, Table> = mutableMapOf()
         while (resultSet.next()) {
@@ -58,45 +48,48 @@ class DbSchema(args: Args) {
             val parents = getParents(tableName)
             val children = getChildren(tableName)
             val columns = getTableColumns(tableName)
-            val table = Table(tableName, columns, parents, children)
+            val table = Table(tableName.toLowerCase(), columns, parents, children)
             tables[table.name] = table
         }
         log(V_VERBOSE, "Collected metadata of @|yellow ${tables.size}|@ tables")
 
-        val relationships = mutableMapOf<RelationshipDirection, Relationship>()
-        val nodes = mutableMapOf<String, TableNode>()
-
-        tables.values.map {
-            val inboundRelationships = (it.parents/* + findParents(tables, it.name)*/).toSet()
-            val outboundRelationships = (it.children /*+ findChildren(tables, it.name)*/).toSet()
-            nodes[it.name] = TableNode(
-                it.name,
-                it.columns,
-                inboundRelationships,
-                outboundRelationships
-            )
-            (inboundRelationships + outboundRelationships)
-                .forEach { rel -> relationships[RelationshipDirection(rel.sourceTable, rel.targetTable)] = rel }
-
-        }
-
-        return SchemaGraph(nodes.toMap(), relationships.toMap())
+        return SchemaGraph(tables.toMap())
     }
+//
+//        val updatedTableMap = tables.map { (k, v) ->
+//            Pair(k, Table(
+//                v.name, v.columns,
+//                v.inbound + findInboundForTable(k, tables),
+//                v.outbound + findOutboundFromTable(k, tables)
+//            ))
+//        }.toMap()
+//
+//        return SchemaGraph(updatedTableMap)
+//    }
+//
+//    private fun findInboundForTable(tableName: String, tables: Map<String, Table>): Set<Relationship> =
+//        tables.values.flatMap { table -> table.outbound.filter { rel -> rel.targetTable.equals(tableName, true) } }
+//            .toSet()
+//
+//    private fun findOutboundFromTable(tableName: String, tables: Map<String, Table>): Set<Relationship> =
+//        tables.values.flatMap { table -> table.inbound.filter { rel -> rel.sourceTable.equals(tableName, true) } }
+//            .toSet()
 
-    private fun getChildren(tableName: String): List<Relationship> {
+
+    private fun getChildren(tableName: String): Set<Relationship> {
         val resultSet = connection.metaData.getExportedKeys(null, null, tableName)
         val results = mutableListOf<Relationship>()
         var target = ""
         val thisColumns = mutableListOf<String>()
         val targetColumns = mutableListOf<String>()
         while (resultSet.next()) {
-            val targetTableName = resultSet.getString("FKTABLE_NAME")
-            val targetColumn = resultSet.getString("FKCOLUMN_NAME")
-            val sourceColumn = resultSet.getString("PKCOLUMN_NAME")
+            val targetTableName = resultSet.getString("FKTABLE_NAME").toLowerCase()
+            val targetColumn = resultSet.getString("FKCOLUMN_NAME").toLowerCase()
+            val sourceColumn = resultSet.getString("PKCOLUMN_NAME").toLowerCase()
             if (target != targetTableName) {
                 if (target != "") {
                     results.add(
-                        Relationship(tableName, target, zipColumns(thisColumns, targetColumns))
+                        Relationship(tableName.toLowerCase(), target, zipColumns(thisColumns, targetColumns))
                     )
                     thisColumns.clear()
                     targetColumns.clear()
@@ -108,25 +101,25 @@ class DbSchema(args: Args) {
             targetColumns.add(targetColumn)
         }
         if (target != "") {
-            results.add(Relationship(tableName, target, zipColumns(thisColumns, targetColumns)))
+            results.add(Relationship(tableName.toLowerCase(), target, zipColumns(thisColumns, targetColumns)))
         }
-        return results.toList()
+        return results.toSet()
     }
 
-    private fun getParents(tableName: String): List<Relationship> {
+    private fun getParents(tableName: String): Set<Relationship> {
         val resultSet = connection.metaData.getImportedKeys(null, null, tableName)
         val results = mutableListOf<Relationship>()
         var source = ""
         val sourceColumns = mutableListOf<String>()
         val targetColumns = mutableListOf<String>()
         while (resultSet.next()) {
-            val sourceTableName = resultSet.getString("PKTABLE_NAME")
-            val sourceColumn = resultSet.getString("PKCOLUMN_NAME")
-            val targetColumn = resultSet.getString("FKCOLUMN_NAME")
+            val sourceTableName = resultSet.getString("PKTABLE_NAME").toLowerCase()
+            val sourceColumn = resultSet.getString("PKCOLUMN_NAME").toLowerCase()
+            val targetColumn = resultSet.getString("FKCOLUMN_NAME").toLowerCase()
             if (source != sourceTableName) {
                 if (source != "") {
                     results.add(
-                        Relationship(source, tableName, zipColumns(sourceColumns, targetColumns))
+                        Relationship(source, tableName.toLowerCase(), zipColumns(sourceColumns, targetColumns))
                     )
                     sourceColumns.clear()
                     targetColumns.clear()
@@ -138,16 +131,16 @@ class DbSchema(args: Args) {
             targetColumns.add(targetColumn)
         }
         if (source != "") {
-            results.add(Relationship(source, tableName, zipColumns(sourceColumns, targetColumns)))
+            results.add(Relationship(source, tableName.toLowerCase(), zipColumns(sourceColumns, targetColumns)))
         }
-        return results.toList()
+        return results.toSet()
     }
 
     private fun getTableColumns(tableName: String): List<Column> {
         val resultSet = connection.metaData.getColumns(null, null, tableName, null)
         val columns = mutableListOf<Column>()
         while (resultSet.next()) {
-            val name = resultSet.getString("COLUMN_NAME")
+            val name = resultSet.getString("COLUMN_NAME").toLowerCase()
             val type = resultSet.getInt("DATA_TYPE")
             columns.add(Column(name, type))
         }

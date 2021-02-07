@@ -1,0 +1,63 @@
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+  <changeSet id="1" author="me">
+    <createTable tableName="main">
+      <column name="id" type="int" autoIncrement="true">
+        <constraints primaryKey="true"/>
+      </column>
+      <column name="text" type="varchar(200)">
+      </column>
+    </createTable>
+    <createTable tableName="child">
+      <column name="first" type="varchar(20)">
+        <constraints primaryKey="true"/>
+      </column>
+      <column name="second" type="varchar(30)">
+        <constraints primaryKey="true"/>
+      </column>
+      <column name="value" type="int"/>
+      <column name="updated_on" type="timestamp"/>
+    </createTable>
+    <createTable tableName="intermediate">
+      <column name="id" type="int" autoIncrement="true">
+        <constraints primaryKey="true"/>
+      </column>
+      <column name="main_id" type="int">
+      </column>
+      <column name="contents" type="varchar(200)"/>
+      <column name="time" type="timestamp"/>
+    </createTable>
+    <addForeignKeyConstraint
+        constraintName="intermediate_main_fk"
+        baseColumnNames="main_id"
+        baseTableName="intermediate"
+        referencedTableName="main"
+        referencedColumnNames="id"/>
+    <createTable tableName="intermediate_to_child">
+      <column name="intermediate_id" type="int">
+        <constraints nullable="false"/>
+      </column>
+      <column name="child_first" type="varchar(20)">
+        <constraints nullable="false"/>
+      </column>
+      <column name="child_second" type="varchar(30)">
+        <constraints nullable="false"/>
+      </column>
+    </createTable>
+    <addUniqueConstraint
+        constraintName="intermediate_to_child_unq"
+        columnNames="intermediate_id,child_first,child_second" tableName="intermediate_to_child"/>
+    <addForeignKeyConstraint baseTableName="intermediate_to_child" baseColumnNames="intermediate_id"
+                             constraintName="intermediate_to_child_intermediate_fk"
+                             referencedTableName="intermediate"
+                             referencedColumnNames="id"/>
+    <addForeignKeyConstraint baseTableName="intermediate_to_child" baseColumnNames="child_first,child_second"
+                             constraintName="intermediate_to_child_child_fk"
+                             referencedTableName="child"
+                             referencedColumnNames="first,second"/>
+  </changeSet>
+
+</databaseChangeLog>
