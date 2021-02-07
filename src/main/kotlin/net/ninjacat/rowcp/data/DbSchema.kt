@@ -55,26 +55,6 @@ class DbSchema(args: Args) {
 
         return SchemaGraph(tables.toMap())
     }
-//
-//        val updatedTableMap = tables.map { (k, v) ->
-//            Pair(k, Table(
-//                v.name, v.columns,
-//                v.inbound + findInboundForTable(k, tables),
-//                v.outbound + findOutboundFromTable(k, tables)
-//            ))
-//        }.toMap()
-//
-//        return SchemaGraph(updatedTableMap)
-//    }
-//
-//    private fun findInboundForTable(tableName: String, tables: Map<String, Table>): Set<Relationship> =
-//        tables.values.flatMap { table -> table.outbound.filter { rel -> rel.targetTable.equals(tableName, true) } }
-//            .toSet()
-//
-//    private fun findOutboundFromTable(tableName: String, tables: Map<String, Table>): Set<Relationship> =
-//        tables.values.flatMap { table -> table.inbound.filter { rel -> rel.sourceTable.equals(tableName, true) } }
-//            .toSet()
-
 
     private fun getChildren(tableName: String): Set<Relationship> {
         val resultSet = connection.metaData.getExportedKeys(null, null, tableName)

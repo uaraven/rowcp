@@ -36,7 +36,8 @@ data class ColumnData(val columnName: String, val type: Int, val value: Any?) {
     companion object {
         val stringTypes = setOf(
             Types.CHAR, Types.NCHAR, Types.VARCHAR, Types.NVARCHAR,
-            Types.LONGVARCHAR, Types.LONGNVARCHAR
+            Types.LONGVARCHAR, Types.LONGNVARCHAR,
+            Types.DATE, Types.TIME, Types.TIMESTAMP, Types.TIME_WITH_TIMEZONE, Types.TIMESTAMP_WITH_TIMEZONE
         )
     }
 }
@@ -57,6 +58,8 @@ data class DataRow(val tableName: String, val columns: List<ColumnData>) {
     }
 
     fun isNotEmpty(): Boolean = columns.isNotEmpty()
+
+    fun dataOnly(): List<Any?> = columns.map { it.value }
 }
 
 
@@ -77,15 +80,24 @@ data class SelectQuery(val sources: String, val filters: List<String>) {
     fun queryList(): List<String> = if (filters.isEmpty()) listOf(sources) else filters.map { "$sources $it" }
 }
 
+data class DataNode(
+    val tableName: String,
+    val rows: List<DataRow>,
+    val before: List<DataNode>,
+    val after: List<DataNode>
+) {
+    fun size(): Int = rows.size + before.map { it.size() }.sum() + after.map { it.size() }.sum()
+}
+
 class DataRetriever(params: Args, private val schema: DbSchema) {
 
     lateinit var sourceConnection: Connection
     lateinit var schemaGraph: SchemaGraph
     lateinit var processedRelationships: MutableSet<Relationship>
     lateinit var preparedRows: MutableSet<DataRow>
-    val chunkSize = params.chunkSize
+    private val chunkSize = params.chunkSize
 
-    fun collectDataToCopy(query: Query, schemaGraph: SchemaGraph): List<DataRow> {
+    fun collectDataToCopy(query: Query, schemaGraph: SchemaGraph): DataNode {
         sourceConnection = schema.connection
         this.schemaGraph = schemaGraph
 
@@ -102,37 +114,37 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
         return walk(startingNode, select)
     }
 
-    fun walk(node: Table, selectQuery: SelectQuery): List<DataRow> {
+    fun walk(node: Table, selectQuery: SelectQuery): DataNode {
         log(V_NORMAL, "Reading table @|yellow ${node.name}|@")
         val rows = retrieveRows(node.name, selectQuery)
         log(V_VERBOSE, "Retrieved @|yellow ${rows.size}|@ rows")
-        val beforeRows: List<DataRow> = if (rows.isNotEmpty()) {
+        val before: List<DataNode> = if (rows.isNotEmpty()) {
             node.inbound.flatMap {
                 val parentNode = schemaGraph.tables[it.sourceTable]!!
                 return@flatMap if (!processedRelationships.contains(it)) { // skip this relationship if we've seen it
                     log(V_VERBOSE, "Processing relationship @|cyan ${parentNode.name}|@ -> @|blue ${node.name}|@")
                     processedRelationships.add(it)
                     val query = buildParentQuery(it, rows)
-                    walk(parentNode, query)
+                    listOf(walk(parentNode, query))
                 } else {
-                    listOf()
+                    listOf<DataNode>()
                 }
             }
         } else listOf()
-        val afterRows: List<DataRow> = if (rows.isNotEmpty()) {
+        val after: List<DataNode> = if (rows.isNotEmpty()) {
             node.outbound.flatMap {
                 val childNode = schemaGraph.tables[it.targetTable]!!
                 return@flatMap if (!processedRelationships.contains(it)) { // skip this relationship if we've seen it
                     log(V_VERBOSE, "Processing relationship @|blue ${node.name}|@ -> @|cyan ${childNode.name}|@")
                     processedRelationships.add(it)
                     val query = buildChildQuery(it, rows)
-                    walk(childNode, query)
+                    listOf(walk(childNode, query))
                 } else {
                     listOf()
                 }
             }
         } else listOf()
-        return beforeRows + rows + afterRows
+        return DataNode(node.name, rows, before, after)
     }
 
     // TODO: Make parametrized, maybe
@@ -196,8 +208,8 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
 
     private fun toDataRow(rs: ResultSet, tableName: String): DataRow {
         val result = mutableListOf<ColumnData>()
-        for (i in 1 until rs.metaData.columnCount) {
-            val columnName = rs.metaData.getColumnName(i)
+        for (i in 1..rs.metaData.columnCount) {
+            val columnName = rs.metaData.getColumnName(i).toLowerCase()
             val columnType = rs.metaData.getColumnType(i)
             val value = rs.getObject(i)
             result.add(ColumnData(columnName, columnType, value))

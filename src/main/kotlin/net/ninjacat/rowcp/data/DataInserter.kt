@@ -13,16 +13,17 @@ class DataInserter(private val args: Args) {
     private val conn =
         DriverManager.getConnection(args.targetJdbcUrl, args.nullableTargetUser(), args.nullableTargetPassword())
 
-    fun prepareBatches(rows: List<DataRow>, schemaGraph: SchemaGraph): List<InsertBatch> {
-        val groupedByTable = rows.groupBy { row -> row.tableName }
+    fun prepareBatches(startingNode: DataNode, schemaGraph: SchemaGraph): List<InsertBatch> {
+        val beforeBatches = startingNode.before.flatMap { prepareBatches(it, schemaGraph) }
+        val afterBatches = startingNode.after.flatMap { prepareBatches(it, schemaGraph) }
 
-        return groupedByTable.flatMap { entry ->
-            val (name, columns, _, _) = schemaGraph.tables[entry.key]!!
-            val baseInsert = "INSERT INTO $name(${columns.joinToString(",") { it.name }})\n" +
-                    "VALUES(${columns.joinToString(",") { "?" }})"
+        val (name, columns, _, _) = schemaGraph.tables[startingNode.tableName]!!
+        val baseInsert = "INSERT INTO $name(${columns.joinToString(",") { it.name }})\n" +
+                "VALUES(${columns.joinToString(",") { "?" }})"
 
-            entry.value.chunked(args.chunkSize).map { InsertBatch(baseInsert, it) }
-        }
+        val batches = startingNode.rows.chunked(args.chunkSize).map { InsertBatch(baseInsert, it) }
+
+        return beforeBatches + batches + afterBatches
     }
 
     fun runBatches(batches: List<InsertBatch>) {

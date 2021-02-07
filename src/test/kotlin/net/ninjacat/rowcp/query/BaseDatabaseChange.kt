@@ -17,7 +17,7 @@ open class BaseDatabaseTest {
     lateinit var targetDb: Connection
 
     @BeforeEach
-    internal fun setUp() {
+    internal open fun setUp() {
         initDatabases()
     }
 
