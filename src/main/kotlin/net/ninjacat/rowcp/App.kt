@@ -21,8 +21,8 @@ fun main(vararg argv: String) {
     try {
         val parser = QueryParser()
 
-        utils.initializeDatabase(args.sourceJdbcUrl)
-        utils.initializeDatabase(args.targetJdbcUrl)
+        Utils.initializeDatabase(args.sourceJdbcUrl)
+        Utils.initializeDatabase(args.targetJdbcUrl)
 
         val dbSchema = DbSchema(args)
         val retriever = DataRetriever(args, dbSchema)

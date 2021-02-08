@@ -2,7 +2,7 @@ package net.ninjacat.rowcp.data
 
 import java.net.URI
 
-object utils {
+object Utils {
 
     fun initializeDatabase(jdbcUrl: String) {
         if (!jdbcUrl.startsWith("jdbc:")) {
