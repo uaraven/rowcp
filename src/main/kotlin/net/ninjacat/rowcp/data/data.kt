@@ -41,10 +41,12 @@ data class ColumnData(val columnName: String, val type: Int, val value: Any?) {
     fun valueAsString(): String {
         return when {
             isNull() -> "NULL"
-            isString() -> "'${value.toString()}'"
+            isString() -> "'${escapeSql(value.toString())}'"
             else -> value.toString()
         }
     }
+
+    private fun escapeSql(sqlString: String): String = sqlString.replace("'", "''")
 
     fun condition(alias: String): String {
         return when {

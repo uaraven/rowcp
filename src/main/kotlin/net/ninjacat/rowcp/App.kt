@@ -12,13 +12,13 @@ fun main(vararg argv: String) {
     val rootLogger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
     rootLogger.level = Level.OFF
 
-    val args = Args.parse(*argv)
-
-    currentLogLevel = args.verbosity
-
     AnsiConsole.systemInstall()
 
     try {
+        val args = Args.parse(*argv)
+
+        currentLogLevel = args.verbosity
+
         val parser = QueryParser()
 
         Utils.initializeDatabase(args.sourceJdbcUrl)

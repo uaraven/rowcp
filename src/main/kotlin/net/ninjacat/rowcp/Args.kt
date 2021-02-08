@@ -73,7 +73,9 @@ class Args {
             val query = lines.dropWhile { it.isNotEmpty() }.filter { it.isNotEmpty() }
             val argv = (arguments + query).toTypedArray()
             val args = parse(*argv)
-            args.validate()
+            if (this.dryRun) {
+                args.dryRun = true
+            }
             return args
         } else {
             if (sourceJdbcUrl.isBlank()) {
