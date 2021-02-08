@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.com/uaraven/rowcp.svg?token=y16Lh7TzbqmZRHfBeyUv&branch=main)](https://travis-ci.com/uaraven/rowcp)
+---
+
 # Row copy
 
 Performs deep row copy from one database to another, including all rows from child and parent tables.
