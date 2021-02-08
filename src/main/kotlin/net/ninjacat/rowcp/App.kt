@@ -31,9 +31,11 @@ fun main(vararg argv: String) {
         val copier = DataCopier(args, parser, dbSchema, retriever, inserter)
         copier.copyData()
 
+    } catch (ae: ArgsParsingException) {
+        // do nothing, help has been shown already
     } catch (e: Exception) {
         logError(e.message)
     }
 
-    AnsiConsole.systemInstall()
+    AnsiConsole.systemUninstall()
 }

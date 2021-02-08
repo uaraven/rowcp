@@ -1,0 +1,12 @@
+--source-connection jdbc:h2:mem:source
+--source-user src
+--source-password srcp
+--target-connection jdbc:h2:mem:target
+--target-user tgt
+--target-password tgtp
+--chunk-size 100
+--dry-run
+--verbose 2
+
+SELECT * FROM Table WHERE it > that
+AND that LIKE 'Stuff%'
