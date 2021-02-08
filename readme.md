@@ -1,6 +1,6 @@
 # Row copy
 
-Performs deep row copying from one database to another. Including all rows from child and parent tables.
+Performs deep row copy from one database to another, including all rows from child and parent tables.
 
 ## Purpose
 
