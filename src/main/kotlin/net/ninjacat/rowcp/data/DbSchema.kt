@@ -6,32 +6,6 @@ import net.ninjacat.rowcp.V_VERBOSE
 import net.ninjacat.rowcp.log
 import java.sql.DriverManager
 
-data class Column(val name: String, val type: Int)
-
-data class ColumnMap(val sourceColumn: String, val targetColumn: String) {
-    companion object {
-        fun from(thisColumn: String, targetColumn: String): ColumnMap {
-            return ColumnMap(thisColumn, targetColumn)
-        }
-    }
-}
-
-data class Relationship(val sourceTable: String, val targetTable: String, val columnMap: List<ColumnMap>)
-
-data class SchemaGraph(
-    val tables: Map<String, Table>
-) {
-
-    fun table(name: String): Table? = tables[name.toLowerCase()]
-}
-
-data class Table(
-    val name: String,
-    val columns: List<Column>,
-    val inbound: Set<Relationship>,
-    val outbound: Set<Relationship>
-)
-
 class DbSchema(args: Args) {
 
     val connection =

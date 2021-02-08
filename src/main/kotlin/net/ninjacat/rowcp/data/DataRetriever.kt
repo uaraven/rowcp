@@ -4,65 +4,6 @@ import net.ninjacat.rowcp.*
 import net.ninjacat.rowcp.query.Query
 import java.sql.*
 
-data class ColumnData(val columnName: String, val type: Int, val value: Any?) {
-    fun isString(): Boolean {
-        return stringTypes.contains(type)
-    }
-
-    fun isNull(): Boolean = value == null
-
-    fun valueAsString(): String {
-        return when {
-            isNull() -> "NULL"
-            isString() -> "'${value.toString()}'"
-            else -> value.toString()
-        }
-    }
-
-    fun condition(alias: String): String {
-        return when {
-            isNull() -> "$alias.$columnName IS NULL"
-            else -> "$alias.$columnName = ${valueAsString()}"
-        }
-    }
-
-    fun addParameter(index: Int, statement: PreparedStatement) {
-        when {
-            isNull() -> statement.setNull(index, type)
-            else -> statement.setObject(index, value, type)
-        }
-    }
-
-    companion object {
-        val stringTypes = setOf(
-            Types.CHAR, Types.NCHAR, Types.VARCHAR, Types.NVARCHAR,
-            Types.LONGVARCHAR, Types.LONGNVARCHAR,
-            Types.DATE, Types.TIME, Types.TIMESTAMP, Types.TIME_WITH_TIMEZONE, Types.TIMESTAMP_WITH_TIMEZONE
-        )
-    }
-}
-
-
-data class DataRow(val tableName: String, val columns: List<ColumnData>) {
-    fun asFilter(alias: String = ""): String {
-        val tableRef = if (alias != "") alias else tableName
-        return columns.joinToString(" AND ", "(", ")") {
-            it.condition(tableRef)
-        }
-    }
-
-    fun addParameters(statement: PreparedStatement) {
-        columns.forEachIndexed { index, column ->
-            column.addParameter(index + 1, statement)
-        }
-    }
-
-    fun isNotEmpty(): Boolean = columns.isNotEmpty()
-
-    fun dataOnly(): List<Any?> = columns.map { it.value }
-}
-
-
 data class SelectRelationship(
     val sourceTableName: String,
     val targetTableName: String,
