@@ -28,6 +28,9 @@ fun main(vararg argv: String) {
         val retriever = DataRetriever(args, dbSchema)
         val inserter = DataInserter(args)
 
+        if (args.dryRun) {
+            log(V_NORMAL, "Performing a @|blue dry run|@")
+        }
         val copier = DataCopier(args, parser, dbSchema, retriever, inserter)
         copier.copyData()
 

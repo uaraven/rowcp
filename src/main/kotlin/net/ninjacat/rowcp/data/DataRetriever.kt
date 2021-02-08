@@ -68,7 +68,7 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
 
     fun walk(node: Table, selectQuery: SelectQuery): DataNode {
         log(V_NORMAL, "Reading table @|yellow ${node.name}|@")
-        val rows = retrieveRows(node.name, selectQuery)
+        val rows = retrieveRows(node, selectQuery)
         log(V_VERBOSE, "Retrieved @|yellow ${rows.size}|@ rows")
         val before: List<DataNode> = if (rows.isNotEmpty()) {
             node.inbound.flatMap {
@@ -79,7 +79,7 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
                     val query = buildParentQuery(it, rows)
                     listOf(walk(parentNode, query))
                 } else {
-                    listOf<DataNode>()
+                    listOf()
                 }
             }
         } else listOf()
@@ -114,7 +114,7 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
         val filters =
             rows.chunked(adjustedChunkSize)
                 .map { row -> "\nWHERE\n" + row.joinToString("\n OR ") { it.asParametrizedFilter("child") } }
-        val parameters = rows.chunked(adjustedChunkSize).map { rowChunk -> rowChunk.flatMap { it.columns } }
+        val parameters = rows.chunked(adjustedChunkSize).map { rowChunk -> rowChunk.flatMap { it.primaryKey() } }
         return SelectQuery(baseQuery, filters, parameters)
     }
 
@@ -133,7 +133,7 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
         val filters =
             rows.chunked(adjustedChunkSize)
                 .map { row -> "\nWHERE\n" + row.joinToString("\n OR ") { it.asParametrizedFilter("parent") } }
-        val parameters = rows.chunked(adjustedChunkSize).map { rowChunk -> rowChunk.flatMap { it.columns } }
+        val parameters = rows.chunked(adjustedChunkSize).map { rowChunk -> rowChunk.flatMap { it.primaryKey() } }
         return SelectQuery(baseQuery, filters, parameters)
     }
 
@@ -141,17 +141,17 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
         if (rows.isEmpty()) {
             return chunkSize
         }
-        val paramsPerRow = rows.first().columns.size
+        val paramsPerRow = rows.first().primaryKey().size
         return min(chunkSize, 900 / paramsPerRow) // allow up to 900 parameters (to support sqlite 999 parameter limit)
     }
 
-    private fun retrieveRows(tableName: String, queries: SelectQuery): List<DataRow> {
+    private fun retrieveRows(table: Table, queries: SelectQuery): List<DataRow> {
         log(V_SQL, "Executing query:\n${queries.select}")
         return queries.queryList().flatMap {
             val statement = sourceConnection.prepareStatement(it.first)
             try {
                 val rs = applyParametersAndQuery(statement, it.second)
-                val result = resultSetToDataRows(rs, tableName)
+                val result = resultSetToDataRows(rs, table)
                 result
             } catch (s: SQLSyntaxErrorException) {
                 log(V_NORMAL, "Query failed @|red ${s.message}|@\n---\n$it\n---\n")
@@ -169,10 +169,10 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
         return statement.executeQuery()
     }
 
-    private fun resultSetToDataRows(rs: ResultSet, tableName: String): List<DataRow> {
+    private fun resultSetToDataRows(rs: ResultSet, table: Table): List<DataRow> {
         val result = mutableListOf<DataRow>()
         while (rs.next()) {
-            val row = toDataRow(rs, tableName)
+            val row = toDataRow(rs, table)
             if (row.isNotEmpty()) {
                 result.add(row)
             }
@@ -181,7 +181,7 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
         return result.toList()
     }
 
-    private fun toDataRow(rs: ResultSet, tableName: String): DataRow {
+    private fun toDataRow(rs: ResultSet, table: Table): DataRow {
         val result = mutableListOf<ColumnData>()
         for (i in 1..rs.metaData.columnCount) {
             val columnName = rs.metaData.getColumnName(i).toLowerCase()
@@ -189,6 +189,6 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
             val value = rs.getObject(i)
             result.add(ColumnData(columnName, columnType, value))
         }
-        return DataRow(tableName, result.toList())
+        return DataRow(table, result.toList())
     }
 }

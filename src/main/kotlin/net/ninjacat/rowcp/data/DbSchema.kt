@@ -22,12 +22,26 @@ class DbSchema(args: Args) {
             val parents = getParents(tableName)
             val children = getChildren(tableName)
             val columns = getTableColumns(tableName)
-            val table = Table(tableName.toLowerCase(), columns, parents, children)
+            val pk = getPrimaryKey(tableName)
+            val table = Table(tableName.toLowerCase(), columns, parents, children, pk)
             tables[table.name] = table
         }
         log(V_VERBOSE, "Collected metadata of @|yellow ${tables.size}|@ tables")
 
         return SchemaGraph(tables.toMap())
+    }
+
+    private fun getPrimaryKey(tableName: String?): Set<String> {
+        val resultSet = connection.metaData.getPrimaryKeys(null, null, tableName)
+        try {
+            val results = mutableListOf<String>()
+            while (resultSet.next()) {
+                results.add(resultSet.getString("COLUMN_NAME").toLowerCase())
+            }
+            return results.toSet()
+        } finally {
+            resultSet.close()
+        }
     }
 
     private fun getChildren(tableName: String): Set<Relationship> {
@@ -36,28 +50,32 @@ class DbSchema(args: Args) {
         var target = ""
         val thisColumns = mutableListOf<String>()
         val targetColumns = mutableListOf<String>()
-        while (resultSet.next()) {
-            val targetTableName = resultSet.getString("FKTABLE_NAME").toLowerCase()
-            val targetColumn = resultSet.getString("FKCOLUMN_NAME").toLowerCase()
-            val sourceColumn = resultSet.getString("PKCOLUMN_NAME").toLowerCase()
-            if (target != targetTableName) {
-                if (target != "") {
-                    results.add(
-                        Relationship(tableName.toLowerCase(), target, zipColumns(thisColumns, targetColumns))
-                    )
-                    thisColumns.clear()
-                    targetColumns.clear()
-                }
+        try {
+            while (resultSet.next()) {
+                val targetTableName = resultSet.getString("FKTABLE_NAME").toLowerCase()
+                val targetColumn = resultSet.getString("FKCOLUMN_NAME").toLowerCase()
+                val sourceColumn = resultSet.getString("PKCOLUMN_NAME").toLowerCase()
+                if (target != targetTableName) {
+                    if (target != "") {
+                        results.add(
+                            Relationship(tableName.toLowerCase(), target, zipColumns(thisColumns, targetColumns))
+                        )
+                        thisColumns.clear()
+                        targetColumns.clear()
+                    }
 
-                target = targetTableName
+                    target = targetTableName
+                }
+                thisColumns.add(sourceColumn)
+                targetColumns.add(targetColumn)
             }
-            thisColumns.add(sourceColumn)
-            targetColumns.add(targetColumn)
+            if (target != "") {
+                results.add(Relationship(tableName.toLowerCase(), target, zipColumns(thisColumns, targetColumns)))
+            }
+            return results.toSet()
+        } finally {
+            resultSet.close()
         }
-        if (target != "") {
-            results.add(Relationship(tableName.toLowerCase(), target, zipColumns(thisColumns, targetColumns)))
-        }
-        return results.toSet()
     }
 
     private fun getParents(tableName: String): Set<Relationship> {
@@ -66,39 +84,47 @@ class DbSchema(args: Args) {
         var source = ""
         val sourceColumns = mutableListOf<String>()
         val targetColumns = mutableListOf<String>()
-        while (resultSet.next()) {
-            val sourceTableName = resultSet.getString("PKTABLE_NAME").toLowerCase()
-            val sourceColumn = resultSet.getString("PKCOLUMN_NAME").toLowerCase()
-            val targetColumn = resultSet.getString("FKCOLUMN_NAME").toLowerCase()
-            if (source != sourceTableName) {
-                if (source != "") {
-                    results.add(
-                        Relationship(source, tableName.toLowerCase(), zipColumns(sourceColumns, targetColumns))
-                    )
-                    sourceColumns.clear()
-                    targetColumns.clear()
-                }
+        try {
+            while (resultSet.next()) {
+                val sourceTableName = resultSet.getString("PKTABLE_NAME").toLowerCase()
+                val sourceColumn = resultSet.getString("PKCOLUMN_NAME").toLowerCase()
+                val targetColumn = resultSet.getString("FKCOLUMN_NAME").toLowerCase()
+                if (source != sourceTableName) {
+                    if (source != "") {
+                        results.add(
+                            Relationship(source, tableName.toLowerCase(), zipColumns(sourceColumns, targetColumns))
+                        )
+                        sourceColumns.clear()
+                        targetColumns.clear()
+                    }
 
-                source = sourceTableName
+                    source = sourceTableName
+                }
+                sourceColumns.add(sourceColumn)
+                targetColumns.add(targetColumn)
             }
-            sourceColumns.add(sourceColumn)
-            targetColumns.add(targetColumn)
+            if (source != "") {
+                results.add(Relationship(source, tableName.toLowerCase(), zipColumns(sourceColumns, targetColumns)))
+            }
+            return results.toSet()
+        } finally {
+            resultSet.close()
         }
-        if (source != "") {
-            results.add(Relationship(source, tableName.toLowerCase(), zipColumns(sourceColumns, targetColumns)))
-        }
-        return results.toSet()
     }
 
     private fun getTableColumns(tableName: String): List<Column> {
         val resultSet = connection.metaData.getColumns(null, null, tableName, null)
         val columns = mutableListOf<Column>()
-        while (resultSet.next()) {
-            val name = resultSet.getString("COLUMN_NAME").toLowerCase()
-            val type = resultSet.getInt("DATA_TYPE")
-            columns.add(Column(name, type))
+        try {
+            while (resultSet.next()) {
+                val name = resultSet.getString("COLUMN_NAME").toLowerCase()
+                val type = resultSet.getInt("DATA_TYPE")
+                columns.add(Column(name, type))
+            }
+            return columns.toList()
+        } finally {
+            resultSet.close()
         }
-        return columns.toList()
     }
 
 

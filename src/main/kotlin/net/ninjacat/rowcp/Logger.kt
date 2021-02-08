@@ -15,9 +15,12 @@ fun logError(message: String?) {
     }
 }
 
-fun log(level: Int, message: String?) {
+fun log(level: Int, message: String?, noLineFeed: Boolean = false) {
     if (level <= currentLogLevel && message != null) {
-        println(ansi().render(message).reset())
+        print(ansi().render(message).reset())
+        if (!noLineFeed) {
+            println()
+        }
     }
 }
 
