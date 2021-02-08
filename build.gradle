@@ -6,7 +6,7 @@ plugins {
     id 'antlr'
 }
 
-mainClassName = 'net.ninjacat.dtc.AppKt'
+mainClassName = 'net.ninjacat.rowcp.AppKt'
 
 group 'net.ninjacat.dtc'
 version '0.1.0'

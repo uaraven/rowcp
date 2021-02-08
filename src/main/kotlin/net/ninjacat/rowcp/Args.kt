@@ -3,12 +3,16 @@ package net.ninjacat.rowcp
 import com.beust.jcommander.JCommander
 import com.beust.jcommander.Parameter
 import java.io.File
+import kotlin.system.exitProcess
 
 class ArgsParsingException : Exception("")
 
 class Args {
     @Parameter(names = ["-p", "--parameter-file"], description = "Read parameters from file")
     var paramFile: String? = null
+
+    @Parameter(names = ["-h", "--help"], description = "Show this mesage")
+    var showHelp: Boolean = false
 
     @Parameter(names = ["-s", "--source-connection"], description = "Source JDBC connection string")
     var sourceJdbcUrl: String = ""
@@ -51,6 +55,9 @@ class Args {
 
 
     private fun validate(): Args {
+        if (showHelp) {
+            return this
+        }
         if (paramFile != null) {
             val lines = File(paramFile!!).readLines()
             val arguments = lines.takeWhile { it.isNotEmpty() }.flatMap {
@@ -103,7 +110,12 @@ class Args {
                 .build()
             commander.parse(*argv)
             try {
-                return args.validate()
+                val result = args.validate()
+                if (result.showHelp) {
+                    commander.usage()
+                    exitProcess(0)
+                }
+                return result
             } catch (e: ArgsParsingException) {
                 commander.usage()
                 throw e
