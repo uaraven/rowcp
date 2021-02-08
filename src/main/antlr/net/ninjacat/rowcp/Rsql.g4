@@ -6,25 +6,9 @@ package net.ninjacat.rowcp;
 
 query: selectStatement ';'? EOF;
 
-operator: '<' | '<=' | '>' | '>=' | '=' | '!=' | '<>';
+where: K_WHERE anything;
 
-list: '(' literalValue (',' literalValue)* ')';
-
-term: compoundName | literalValue;
-
-expr:
-	term operator term							# condition
-	| expr K_AND expr							# andExpr
-	| expr K_OR expr							# orExpr
-	| expr K_IS K_NOT? K_NULL                                               # isNullExpr
-	| K_NOT expr								# notExpr
-	| '(' expr ')'								# parensExpr
-	| term K_BETWEEN expr K_AND expr			# betweenExpr
-	| term K_NOT? K_LIKE stringValue			# likeExpr
-	| term K_NOT? K_IN list						# inExpr
-	| term K_NOT? K_IN '(' selectStatement ')'	# subSelectExpr;
-
-where: K_WHERE expr;
+anything: .*?;
 
 distinct: K_DISTINCT;
 
@@ -32,49 +16,18 @@ projection: distinct? K_ALL;
 
 selectStatement: K_SELECT projection K_FROM sourceName where?;
 
-signedNumber: ( '+' | '-')? NUMERIC_LITERAL;
-
-stringValue: STRING_LITERAL;
-
-nullValue: K_NULL;
-
-literalValue: signedNumber | stringValue | nullValue;
-
 alias: IDENTIFIER;
 
 sourceName: name alias?;
 
-compoundName: (qualifier '.')? name;
-
 name: IDENTIFIER;
 
-qualifier: IDENTIFIER;
-
 K_ALL: '*';
-K_AND: A N D;
 K_AS: A S;
-K_BETWEEN: B E T W E E N;
 K_FROM: F R O M;
-K_IN: I N;
-K_NOT: N O T;
-K_NULL: N U L L;
-K_OR: O R;
-K_REGEX: R E G E X;
 K_SELECT: S E L E C T;
-K_MATCH: M A T C H;
-K_WHERE: W H E R E;
-K_TRUE: T R U E;
-K_FALSE: F A L S E;
-K_JOIN: J O I N;
-K_LEFT: L E F T;
-K_RIGHT: R I G H T;
-K_OUTER: O U T E R;
-K_INNER: I N N E R;
-K_CROSS: C R O S S;
-K_ON: O N;
 K_DISTINCT: D I S T I N C T;
-K_LIKE: L I K E;
-K_IS: I S;
+K_WHERE: W H E R E;
 
 IDENTIFIER: SIMPLE_IDENTIFIER | QUOTED_IDENTIFIER;
 

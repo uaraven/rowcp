@@ -1,7 +1,6 @@
 package net.ninjacat.rowcp.query
 
-import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 internal class QueryParserTest {
@@ -53,10 +52,10 @@ internal class QueryParserTest {
     }
 
     @Test
-    internal fun testFailWhenIncorrectWhere() {
+    internal fun testNotFailWhenIncorrectWhere() {
         val parser = QueryParser()
-        assertThatThrownBy {
+        assertThatCode {
             parser.parseQuery("SELECT * FROM Table WHERE A = ")
-        }.isInstanceOf(QueryParsingException::class.java)
+        }.doesNotThrowAnyException()
     }
 }
