@@ -2,6 +2,7 @@ package net.ninjacat.rowcp.data
 
 import net.ninjacat.rowcp.*
 import net.ninjacat.rowcp.query.Query
+import java.lang.Integer.min
 import java.sql.*
 
 data class SelectRelationship(
@@ -17,8 +18,18 @@ data class TableRowsNode(
     val children: List<SelectRelationship>
 )
 
-data class SelectQuery(val sources: String, val filters: List<String>) {
-    fun queryList(): List<String> = if (filters.isEmpty()) listOf(sources) else filters.map { "$sources $it" }
+data class SelectQuery(val select: String, val filters: List<String>, val parameters: List<List<ColumnData>>) {
+    fun queryList(): List<Pair<String, List<ColumnData>>> = when {
+        filters.isEmpty() -> {
+            listOf(Pair(select, listOf()))
+        }
+        parameters.isEmpty() -> {
+            filters.map { Pair("$select $it", listOf()) }
+        }
+        else -> {
+            filters.zip(parameters).map { (filter, param) -> Pair("$select $filter", param) }
+        }
+    }
 }
 
 data class DataNode(
@@ -46,7 +57,7 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
         val startingNode = schemaGraph.tables[query.table]!!
         val select = SelectQuery(
             "SELECT ${if (query.selectDistinct) "DISTINCT" else ""} * FROM ${query.table}",
-            if (query.filter != "") listOf("\nWHERE\n${query.filter}") else listOf()
+            (if (query.filter != "") listOf("\nWHERE\n${query.filter}") else listOf()), listOf()
         )
 
         processedRelationships = mutableSetOf()
@@ -99,9 +110,12 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
                 )
             }.toString()
 
+        val adjustedChunkSize = calculateChunkSize(rows)
         val filters =
-            rows.chunked(chunkSize).map { row -> "\nWHERE\n" + row.joinToString("\n OR ") { it.asFilter("child") } }
-        return SelectQuery(baseQuery, filters)
+            rows.chunked(adjustedChunkSize)
+                .map { row -> "\nWHERE\n" + row.joinToString("\n OR ") { it.asParametrizedFilter("child") } }
+        val parameters = rows.chunked(adjustedChunkSize).map { rowChunk -> rowChunk.flatMap { it.columns } }
+        return SelectQuery(baseQuery, filters, parameters)
     }
 
     private fun buildChildQuery(relationship: Relationship, rows: List<DataRow>): SelectQuery {
@@ -114,25 +128,45 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
                 )
             }.toString()
 
+        val adjustedChunkSize = calculateChunkSize(rows)
+
         val filters =
-            rows.chunked(chunkSize).map { row -> "\nWHERE\n" + row.joinToString("\n OR ") { it.asFilter("parent") } }
-        return SelectQuery(baseQuery, filters)
+            rows.chunked(adjustedChunkSize)
+                .map { row -> "\nWHERE\n" + row.joinToString("\n OR ") { it.asParametrizedFilter("parent") } }
+        val parameters = rows.chunked(adjustedChunkSize).map { rowChunk -> rowChunk.flatMap { it.columns } }
+        return SelectQuery(baseQuery, filters, parameters)
+    }
+
+    private fun calculateChunkSize(rows: List<DataRow>): Int {
+        if (rows.isEmpty()) {
+            return chunkSize
+        }
+        val paramsPerRow = rows.first().columns.size
+        return min(chunkSize, 900 / paramsPerRow) // allow up to 900 parameters (to support sqlite 999 parameter limit)
     }
 
     private fun retrieveRows(tableName: String, queries: SelectQuery): List<DataRow> {
-        log(V_SQL, "Executing query:\n${queries.sources}")
+        log(V_SQL, "Executing query:\n${queries.select}")
         return queries.queryList().flatMap {
+            val statement = sourceConnection.prepareStatement(it.first)
             try {
-                val statement = sourceConnection.createStatement()
-                val rs = statement.executeQuery(it)
+                val rs = applyParametersAndQuery(statement, it.second)
                 val result = resultSetToDataRows(rs, tableName)
-                statement.close()
                 result
             } catch (s: SQLSyntaxErrorException) {
                 log(V_NORMAL, "Query failed @|red ${s.message}|@\n---\n$it\n---\n")
                 throw s
+            } finally {
+                statement.close()
             }
         }
+    }
+
+    private fun applyParametersAndQuery(statement: PreparedStatement, second: List<ColumnData>): ResultSet {
+        second.forEachIndexed { index, column ->
+            statement.setObject(index + 1, column.value, column.type)
+        }
+        return statement.executeQuery()
     }
 
     private fun resultSetToDataRows(rs: ResultSet, tableName: String): List<DataRow> {

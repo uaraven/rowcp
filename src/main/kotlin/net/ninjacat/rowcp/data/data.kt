@@ -55,6 +55,13 @@ data class ColumnData(val columnName: String, val type: Int, val value: Any?) {
         }
     }
 
+    fun parametrizedCondition(alias: String): String {
+        return when {
+            isNull() -> "$alias.$columnName IS NULL"
+            else -> "$alias.$columnName = ?"
+        }
+    }
+
     fun addParameter(index: Int, statement: PreparedStatement) {
         when {
             isNull() -> statement.setNull(index, type)
@@ -77,6 +84,19 @@ data class DataRow(val tableName: String, val columns: List<ColumnData>) {
         val tableRef = if (alias != "") alias else tableName
         return columns.joinToString(" AND ", "(", ")") {
             it.condition(tableRef)
+        }
+    }
+
+    fun asParametrizedFilter(alias: String = ""): String {
+        val tableRef = if (alias != "") alias else tableName
+        return columns.joinToString(" AND ", "(", ")") {
+            it.parametrizedCondition(tableRef)
+        }
+    }
+
+    fun setAllParameters(statement: PreparedStatement) {
+        columns.filter { !it.isNull() }.forEachIndexed { index, column ->
+            column.addParameter(index + 1, statement)
         }
     }
 
