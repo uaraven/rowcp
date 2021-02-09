@@ -65,12 +65,26 @@ database, this sets the size of the `INSERT` batch.
 ### Parameter file
 
 All the options can be stored in a file path to which can be passed to `--parameter-file` argument.
-When `--parameter-file` option is used **ALL** of the parameters passed on the command line are ignored, i.e. if you
-pass `--skip-missing-columns` on the command line together with parameter file which does not contain that option, the
-one passed on the command line will be ignored.
 
-The only exception is the `--dry-run` option which takes precedence over the parameter file when passed on the command
-line.
+Parameter file must contain one option per line. The query must be the last option and separated from the rest of the
+options by an empty line.
+
+```
+--source-connection jdbc:mariadb://some_server:3306
+--source-user src_user
+--source-password src_password
+--target-connection jdbc:mysql://localhost:3306/database
+--target-user mysql
+--target-password mysql
+--verbose 2
+--skip-tables table1, table2
+--skip-missing-columns
+
+SELECT * FROM table3 WHERE id in (1,2,3)
+AND name IS NOT NULL;
+```
+
+Any options passed on command-line will override the ones specified in the parameter file.
 
 ## Limitations
 

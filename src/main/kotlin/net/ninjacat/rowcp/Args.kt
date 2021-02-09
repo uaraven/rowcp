@@ -8,6 +8,7 @@ import kotlin.system.exitProcess
 class ArgsParsingException : Exception("")
 
 class Args {
+
     @Parameter(names = ["-p", "--parameter-file"], description = "Read parameters from file")
     var paramFile: String? = null
 
@@ -41,10 +42,10 @@ class Args {
     var targetPassword: String = ""
 
     @Parameter(names = ["-v", "--verbose"], description = "Verbose output")
-    var verbosity: Int = 1
+    var verbosity: Int = DEFAULT_VERBOSITY
 
     @Parameter(names = ["--chunk-size"], description = "Split long queries in chunks of that size")
-    var chunkSize: Int = 500
+    var chunkSize: Int = DEFAULT_CHUNK_SIZE
 
     @Parameter(names = ["-d", "--dry-run"], description = "Perform all actions except for actual data insertion")
     var dryRun: Boolean = false
@@ -66,10 +67,8 @@ class Args {
         }
         if (paramFile != null) {
             val args = loadArgsFromFile(paramFile!!)
-            if (this.dryRun) {
-                args.dryRun = true
-            }
-            return args
+            val mergedArgs = args.merge(this)
+            return mergedArgs.validate()
         } else {
             if (sourceJdbcUrl.isBlank()) {
                 log(V_NORMAL, "@|red --source-connection|@ parameter is required")
@@ -87,6 +86,35 @@ class Args {
         return this
     }
 
+    private fun merge(params: Args): Args {
+        val result = Args()
+        result.sourceJdbcUrl = override(params.sourceJdbcUrl, "", this.sourceJdbcUrl)!!
+        result.sourceUser = override(params.sourceUser, "", this.sourceUser)!!
+        result.sourcePassword = override(params.sourcePassword, "", this.sourcePassword)!!
+        result.targetJdbcUrl = override(params.targetJdbcUrl, "", this.targetJdbcUrl)!!
+        result.targetUser = override(params.targetUser, "", this.targetUser)!!
+        result.targetPassword = override(params.targetPassword, "", this.targetPassword)!!
+        result.verbosity = override(params.verbosity, DEFAULT_VERBOSITY, this.verbosity)!!
+        result.chunkSize = override(params.chunkSize, DEFAULT_CHUNK_SIZE, this.chunkSize)!!
+        result.skipSourceTables = override(params.skipSourceTables, null, this.skipSourceTables)
+        result.skipMissingColumns = override(params.skipMissingColumns, false, this.skipMissingColumns)!!
+        result.dryRun = override(params.dryRun, false, this.dryRun)!!
+        result.query = override(params.query, mutableListOf(), this.query)!!
+        result.paramFile = null
+        return result
+    }
+
+    /**
+     * if override value is not equal to standard than take it, otherwise use default value
+     */
+    private fun <T> override(override: T?, standard: T?, default: T?): T? {
+        return if (override == standard) {
+            default
+        } else {
+            override
+        }
+    }
+
     fun getQuery(): String = query.joinToString(" ").trim()
 
     fun nullableTargetUser(): String? = if (targetUser.isEmpty()) null else targetUser
@@ -96,6 +124,9 @@ class Args {
 
 
     companion object {
+        private const val DEFAULT_CHUNK_SIZE: Int = 500
+        private const val DEFAULT_VERBOSITY: Int = 1
+
         fun parse(vararg argv: String): Args {
             val args = Args()
             val commander = JCommander.newBuilder()
@@ -131,6 +162,7 @@ class Args {
             val query = lines.dropWhile { it.isNotEmpty() }.filter { it.isNotEmpty() }
             val argv = (arguments + query).toTypedArray()
             val args = parse(*argv)
+            args.paramFile = null
             return args
         }
 

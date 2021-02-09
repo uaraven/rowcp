@@ -49,4 +49,29 @@ internal class ArgsTest {
             )
         )
     }
+
+    @Test
+    internal fun testParameterFileOverride() {
+        val args = Args.parse(
+            "--parameter-file", "test-data/parameters.txt",
+            "--verbose", "3", "--chunk-size", "10", "--target-user", "user2", "SELECT * FROM table WHERE it = 10"
+        )
+
+        assertThat(args.sourceJdbcUrl).isEqualTo("jdbc:h2:mem:source")
+        assertThat(args.sourceUser).isEqualTo("src")
+        assertThat(args.sourcePassword).isEqualTo("srcp")
+        assertThat(args.targetJdbcUrl).isEqualTo("jdbc:h2:mem:target")
+        assertThat(args.targetUser).isEqualTo("user2")
+        assertThat(args.targetPassword).isEqualTo("tgtp")
+        assertThat(args.chunkSize).isEqualTo(10)
+        assertThat(args.dryRun).isTrue
+        assertThat(args.verbosity).isEqualTo(3)
+        assertThat(args.paramFile).isNull()
+
+        assertThat(args.query).isEqualTo(
+            listOf(
+                "SELECT * FROM table WHERE it = 10"
+            )
+        )
+    }
 }
