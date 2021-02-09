@@ -8,8 +8,8 @@ plugins {
 
 mainClassName = 'net.ninjacat.rowcp.AppKt'
 
-group 'net.ninjacat.dtc'
-version '0.1.0'
+group 'net.ninjacat.rowcp'
+version '0.2.0'
 
 repositories {
     mavenCentral()
@@ -44,6 +44,7 @@ dependencies {
     testImplementation "org.assertj:assertj-core:3.18.1"
     testImplementation 'org.liquibase:liquibase-core:4.2.2'
     testImplementation 'com.h2database:h2:1.4.200'
+    testImplementation 'io.mockk:mockk:1.10.5'
 }
 
 generateGrammarSource {

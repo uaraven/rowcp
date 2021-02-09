@@ -7,7 +7,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.sql.Types
 
-internal class DataInserterTest : BaseDatabaseTest() {
+internal class DataWriterTest : BaseDatabaseTest() {
 
     private lateinit var graph: SchemaGraph
     private lateinit var schema: DbSchema
@@ -17,16 +17,16 @@ internal class DataInserterTest : BaseDatabaseTest() {
     override fun setUp() {
         super.setUp()
         this.args = createArgs(sourceUrl, targetUrl)
-        this.schema = DbSchema(args)
-        this.graph = schema.buildSchemaGraph()
+        this.schema = DbSchema(targetUrl, null, null)
+        this.graph = schema.getSchemaGraph()
     }
 
     @Test
     internal fun testCreateBatches() {
         val node = prepareDataNode()
 
-        val inserter = DataInserter(args)
-        val batches = inserter.prepareBatches(node, schema.buildSchemaGraph())
+        val inserter = DataWriter(args, schema)
+        val batches = inserter.prepareBatches(node)
 
         assertThat(batches).hasSize(4)
         assertThat(batches.flatMap { batch -> batch.data.map { it.tableName() } }).contains(
@@ -42,8 +42,8 @@ internal class DataInserterTest : BaseDatabaseTest() {
         val node = prepareManyBatches()
         args.chunkSize = 20
 
-        val inserter = DataInserter(args)
-        val batches = inserter.prepareBatches(node, schema.buildSchemaGraph())
+        val inserter = DataWriter(args, schema)
+        val batches = inserter.prepareBatches(node)
 
         assertThat(batches).hasSize(5)
         assertThat(batches.flatMap { batch -> batch.data.map { it.tableName() } }).contains("main")
@@ -54,8 +54,8 @@ internal class DataInserterTest : BaseDatabaseTest() {
         val node = prepareManyBatches()
         args.chunkSize = 20
 
-        val inserter = DataInserter(args)
-        val batches = inserter.prepareBatches(node, schema.buildSchemaGraph())
+        val inserter = DataWriter(args, schema)
+        val batches = inserter.prepareBatches(node)
         inserter.runBatches(batches)
 
         val count = getRowCount("main")
@@ -67,8 +67,8 @@ internal class DataInserterTest : BaseDatabaseTest() {
     internal fun testInsertBatchesAllTables() {
         val node = prepareRealDataNode()
 
-        val inserter = DataInserter(args)
-        val batches = inserter.prepareBatches(node, schema.buildSchemaGraph())
+        val inserter = DataWriter(args, schema)
+        val batches = inserter.prepareBatches(node)
         inserter.runBatches(batches)
 
         val mainCount = getRowCount("main")

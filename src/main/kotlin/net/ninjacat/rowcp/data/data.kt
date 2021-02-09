@@ -27,13 +27,18 @@ data class Table(
     val inbound: Set<Relationship>,
     val outbound: Set<Relationship>,
     val primaryKey: Set<String>
-)
+) {
+    val columnNames = columns.map { it.name }.toSet()
+}
 
 data class ColumnData(val columnName: String, val type: Int, val value: Any?) {
 
     private fun isNull(): Boolean = value == null
 
-    fun parametrizedCondition(alias: String): String = "$alias.$columnName = ?"
+    fun parametrizedCondition(alias: String): String = when {
+        isNull() -> "$alias.$columnName IS NULL"
+        else -> "$alias.$columnName = ?"
+    }
 
     fun addParameter(index: Int, statement: PreparedStatement) {
         when {
@@ -65,9 +70,12 @@ data class DataRow(val table: Table, val columns: List<ColumnData>) {
 
     fun primaryKey(): List<ColumnData> =
         columns.filter { table.primaryKey.isEmpty() || table.primaryKey.contains(it.columnName) }
+            .filter { columnData -> columnData.value != null }
 
     fun isNotEmpty(): Boolean = columns.isNotEmpty()
 
     fun dataOnly(): List<Any?> = columns.map { it.value }
+
+    val columnNames: Set<String> by lazy { columns.map { it.columnName }.toSet() }
 }
 

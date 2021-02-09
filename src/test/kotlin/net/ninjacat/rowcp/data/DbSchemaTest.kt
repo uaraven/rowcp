@@ -10,9 +10,9 @@ internal class DbSchemaTest : BaseDatabaseTest() {
     internal fun testSchemaGraphContainsTables() {
         val args = createArgs(sourceUrl, targetUrl)
 
-        val schema = DbSchema(args)
+        val schema = DbSchema(args.sourceJdbcUrl, args.nullableSourceUser(), args.nullableSourcePassword())
 
-        val graph = schema.buildSchemaGraph()
+        val graph = schema.getSchemaGraph()
 
         assertThat(graph.tables).containsKeys("main", "intermediate", "child", "intermediate_to_child")
 
@@ -24,9 +24,9 @@ internal class DbSchemaTest : BaseDatabaseTest() {
     internal fun testOutboundForeignKeys() {
         val args = createArgs(sourceUrl, targetUrl)
 
-        val schema = DbSchema(args)
+        val schema = DbSchema(args.sourceJdbcUrl, args.nullableSourceUser(), args.nullableSourcePassword())
 
-        val graph = schema.buildSchemaGraph()
+        val graph = schema.getSchemaGraph()
         val child = graph.table("CHILD")!!
         assertThat(child.outbound).hasSize(1)
         val relation = child.outbound.first()
@@ -41,9 +41,9 @@ internal class DbSchemaTest : BaseDatabaseTest() {
     internal fun testInboundForeignKeys() {
         val args = createArgs(sourceUrl, targetUrl)
 
-        val schema = DbSchema(args)
+        val schema = DbSchema(args.sourceJdbcUrl, args.nullableSourceUser(), args.nullableSourcePassword())
 
-        val graph = schema.buildSchemaGraph()
+        val graph = schema.getSchemaGraph()
         val table = graph.table("intermediate_to_child")!!
         assertThat(table.inbound).hasSize(2)
         val relation = table.inbound.find { it.sourceTable == "child" }!!
