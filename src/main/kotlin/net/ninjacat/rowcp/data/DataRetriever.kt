@@ -2,6 +2,7 @@ package net.ninjacat.rowcp.data
 
 import net.ninjacat.rowcp.*
 import net.ninjacat.rowcp.query.Query
+import java.lang.Integer.min
 import java.sql.*
 
 data class SelectRelationship(
@@ -17,8 +18,18 @@ data class TableRowsNode(
     val children: List<SelectRelationship>
 )
 
-data class SelectQuery(val sources: String, val filters: List<String>) {
-    fun queryList(): List<String> = if (filters.isEmpty()) listOf(sources) else filters.map { "$sources $it" }
+data class SelectQuery(val select: String, val filters: List<String>, val parameters: List<List<ColumnData>>) {
+    fun queryList(): List<Pair<String, List<ColumnData>>> = when {
+        filters.isEmpty() -> {
+            listOf(Pair(select, listOf()))
+        }
+        parameters.isEmpty() -> {
+            filters.map { Pair("$select $it", listOf()) }
+        }
+        else -> {
+            filters.zip(parameters).map { (filter, param) -> Pair("$select $filter", param) }
+        }
+    }
 }
 
 data class DataNode(
@@ -46,7 +57,7 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
         val startingNode = schemaGraph.tables[query.table]!!
         val select = SelectQuery(
             "SELECT ${if (query.selectDistinct) "DISTINCT" else ""} * FROM ${query.table}",
-            if (query.filter != "") listOf("\nWHERE\n${query.filter}") else listOf()
+            (if (query.filter != "") listOf("\nWHERE\n${query.filter}") else listOf()), listOf()
         )
 
         processedRelationships = mutableSetOf()
@@ -57,7 +68,7 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
 
     fun walk(node: Table, selectQuery: SelectQuery): DataNode {
         log(V_NORMAL, "Reading table @|yellow ${node.name}|@")
-        val rows = retrieveRows(node.name, selectQuery)
+        val rows = retrieveRows(node, selectQuery)
         log(V_VERBOSE, "Retrieved @|yellow ${rows.size}|@ rows")
         val before: List<DataNode> = if (rows.isNotEmpty()) {
             node.inbound.flatMap {
@@ -68,7 +79,7 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
                     val query = buildParentQuery(it, rows)
                     listOf(walk(parentNode, query))
                 } else {
-                    listOf<DataNode>()
+                    listOf()
                 }
             }
         } else listOf()
@@ -99,9 +110,12 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
                 )
             }.toString()
 
+        val adjustedChunkSize = calculateChunkSize(rows)
         val filters =
-            rows.chunked(chunkSize).map { row -> "\nWHERE\n" + row.joinToString("\n OR ") { it.asFilter("child") } }
-        return SelectQuery(baseQuery, filters)
+            rows.chunked(adjustedChunkSize)
+                .map { row -> "\nWHERE\n" + row.joinToString("\n OR ") { it.asParametrizedFilter("child") } }
+        val parameters = rows.chunked(adjustedChunkSize).map { rowChunk -> rowChunk.flatMap { it.primaryKey() } }
+        return SelectQuery(baseQuery, filters, parameters)
     }
 
     private fun buildChildQuery(relationship: Relationship, rows: List<DataRow>): SelectQuery {
@@ -114,31 +128,51 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
                 )
             }.toString()
 
+        val adjustedChunkSize = calculateChunkSize(rows)
+
         val filters =
-            rows.chunked(chunkSize).map { row -> "\nWHERE\n" + row.joinToString("\n OR ") { it.asFilter("parent") } }
-        return SelectQuery(baseQuery, filters)
+            rows.chunked(adjustedChunkSize)
+                .map { row -> "\nWHERE\n" + row.joinToString("\n OR ") { it.asParametrizedFilter("parent") } }
+        val parameters = rows.chunked(adjustedChunkSize).map { rowChunk -> rowChunk.flatMap { it.primaryKey() } }
+        return SelectQuery(baseQuery, filters, parameters)
     }
 
-    private fun retrieveRows(tableName: String, queries: SelectQuery): List<DataRow> {
-        log(V_SQL, "Executing query:\n${queries.sources}")
+    private fun calculateChunkSize(rows: List<DataRow>): Int {
+        if (rows.isEmpty()) {
+            return chunkSize
+        }
+        val paramsPerRow = rows.first().primaryKey().size
+        return min(chunkSize, 900 / paramsPerRow) // allow up to 900 parameters (to support sqlite 999 parameter limit)
+    }
+
+    private fun retrieveRows(table: Table, queries: SelectQuery): List<DataRow> {
+        log(V_SQL, "Executing query:\n${queries.select}")
         return queries.queryList().flatMap {
+            val statement = sourceConnection.prepareStatement(it.first)
             try {
-                val statement = sourceConnection.createStatement()
-                val rs = statement.executeQuery(it)
-                val result = resultSetToDataRows(rs, tableName)
-                statement.close()
+                val rs = applyParametersAndQuery(statement, it.second)
+                val result = resultSetToDataRows(rs, table)
                 result
             } catch (s: SQLSyntaxErrorException) {
                 log(V_NORMAL, "Query failed @|red ${s.message}|@\n---\n$it\n---\n")
                 throw s
+            } finally {
+                statement.close()
             }
         }
     }
 
-    private fun resultSetToDataRows(rs: ResultSet, tableName: String): List<DataRow> {
+    private fun applyParametersAndQuery(statement: PreparedStatement, second: List<ColumnData>): ResultSet {
+        second.forEachIndexed { index, column ->
+            statement.setObject(index + 1, column.value, column.type)
+        }
+        return statement.executeQuery()
+    }
+
+    private fun resultSetToDataRows(rs: ResultSet, table: Table): List<DataRow> {
         val result = mutableListOf<DataRow>()
         while (rs.next()) {
-            val row = toDataRow(rs, tableName)
+            val row = toDataRow(rs, table)
             if (row.isNotEmpty()) {
                 result.add(row)
             }
@@ -147,7 +181,7 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
         return result.toList()
     }
 
-    private fun toDataRow(rs: ResultSet, tableName: String): DataRow {
+    private fun toDataRow(rs: ResultSet, table: Table): DataRow {
         val result = mutableListOf<ColumnData>()
         for (i in 1..rs.metaData.columnCount) {
             val columnName = rs.metaData.getColumnName(i).toLowerCase()
@@ -155,6 +189,6 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
             val value = rs.getObject(i)
             result.add(ColumnData(columnName, columnType, value))
         }
-        return DataRow(tableName, result.toList())
+        return DataRow(table, result.toList())
     }
 }

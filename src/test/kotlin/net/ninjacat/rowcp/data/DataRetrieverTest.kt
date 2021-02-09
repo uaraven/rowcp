@@ -107,7 +107,7 @@ internal class DataRetrieverTest : BaseDatabaseTest() {
     }
 
     private fun findTableDataInNode(tableName: String, node: DataNode): List<DataRow> {
-        return node.rows.filter { it.tableName == tableName } +
+        return node.rows.filter { it.tableName() == tableName } +
                 node.before.flatMap { findTableDataInNode(tableName, it) } +
                 node.after.flatMap { findTableDataInNode(tableName, it) }
     }

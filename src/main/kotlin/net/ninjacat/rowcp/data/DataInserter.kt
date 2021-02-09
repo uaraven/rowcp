@@ -51,7 +51,7 @@ class DataInserter(private val args: Args) {
         val statement = conn.prepareStatement(batch.statement)
         try {
             batch.data.forEach { row ->
-                row.addParameters(statement)
+                row.addParametersForInsert(statement)
                 statement.addBatch()
             }
             if (!args.dryRun) {

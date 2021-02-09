@@ -9,6 +9,7 @@ import java.sql.Types
 
 internal class DataInserterTest : BaseDatabaseTest() {
 
+    private lateinit var graph: SchemaGraph
     private lateinit var schema: DbSchema
     private lateinit var args: Args
 
@@ -17,6 +18,7 @@ internal class DataInserterTest : BaseDatabaseTest() {
         super.setUp()
         this.args = createArgs(sourceUrl, targetUrl)
         this.schema = DbSchema(args)
+        this.graph = schema.buildSchemaGraph()
     }
 
     @Test
@@ -27,7 +29,7 @@ internal class DataInserterTest : BaseDatabaseTest() {
         val batches = inserter.prepareBatches(node, schema.buildSchemaGraph())
 
         assertThat(batches).hasSize(4)
-        assertThat(batches.flatMap { batch -> batch.data.map { it.tableName } }).contains(
+        assertThat(batches.flatMap { batch -> batch.data.map { it.tableName() } }).contains(
             "main",
             "intermediate",
             "intermediate_to_child",
@@ -44,7 +46,7 @@ internal class DataInserterTest : BaseDatabaseTest() {
         val batches = inserter.prepareBatches(node, schema.buildSchemaGraph())
 
         assertThat(batches).hasSize(5)
-        assertThat(batches.flatMap { batch -> batch.data.map { it.tableName } }).contains("main")
+        assertThat(batches.flatMap { batch -> batch.data.map { it.tableName() } }).contains("main")
     }
 
     @Test
@@ -97,7 +99,7 @@ internal class DataInserterTest : BaseDatabaseTest() {
     private fun prepareManyBatches(): DataNode {
         val rows = (1..100).map { idx ->
             DataRow(
-                "main", listOf(
+                graph.tables["main"]!!, listOf(
                     ColumnData("id", Types.INTEGER, idx),
                     ColumnData("text", Types.VARCHAR, "row $idx"),
                 )
@@ -110,7 +112,7 @@ internal class DataInserterTest : BaseDatabaseTest() {
         val beforeNode = DataNode(
             "main", listOf(
                 DataRow(
-                    "main", listOf(
+                    graph.tables["main"]!!, listOf(
                         ColumnData("id", Types.INTEGER, 1),
                         ColumnData("text", Types.VARCHAR, "1"),
                     )
@@ -120,7 +122,7 @@ internal class DataInserterTest : BaseDatabaseTest() {
         val afterNode = DataNode(
             "intermediate", listOf(
                 DataRow(
-                    "intermediate", listOf(
+                    graph.tables["intermediate"]!!, listOf(
                         ColumnData("id", Types.INTEGER, 1),
                         ColumnData("main_id", Types.INTEGER, 1),
                         ColumnData("contents", Types.VARCHAR, "1"),
@@ -131,7 +133,7 @@ internal class DataInserterTest : BaseDatabaseTest() {
         val afterNode2 = DataNode(
             "child", listOf(
                 DataRow(
-                    "child", listOf(
+                    graph.table("child")!!, listOf(
                         ColumnData("first", Types.VARCHAR, "1"),
                         ColumnData("second", Types.VARCHAR, "1"),
                         ColumnData("value", Types.INTEGER, 1),
@@ -142,7 +144,7 @@ internal class DataInserterTest : BaseDatabaseTest() {
         return DataNode(
             "intermediate_to_child", listOf(
                 DataRow(
-                    "intermediate_to_child", listOf(
+                    graph.table("intermediate_to_child")!!, listOf(
                         ColumnData("intermediate_id", Types.INTEGER, 1),
                         ColumnData("first_child", Types.VARCHAR, "1"),
                         ColumnData("second_child", Types.VARCHAR, "1"),
@@ -157,7 +159,7 @@ internal class DataInserterTest : BaseDatabaseTest() {
         val main = DataNode(
             "main", listOf(
                 DataRow(
-                    "main", listOf(
+                    graph.table("main")!!, listOf(
                         ColumnData("id", Types.INTEGER, 1),
                         ColumnData("text", Types.VARCHAR, "1"),
                     )
@@ -167,7 +169,7 @@ internal class DataInserterTest : BaseDatabaseTest() {
         val intermediate = DataNode(
             "intermediate", listOf(
                 DataRow(
-                    "intermediate", listOf(
+                    graph.table("intermediate")!!, listOf(
                         ColumnData("id", Types.INTEGER, 1),
                         ColumnData("main_id", Types.INTEGER, 1),
                         ColumnData("contents", Types.VARCHAR, "1"),
@@ -179,7 +181,7 @@ internal class DataInserterTest : BaseDatabaseTest() {
         val child = DataNode(
             "child", listOf(
                 DataRow(
-                    "child", listOf(
+                    graph.table("child")!!, listOf(
                         ColumnData("first", Types.VARCHAR, "1"),
                         ColumnData("second", Types.VARCHAR, "1"),
                         ColumnData("value", Types.INTEGER, 1),
@@ -187,7 +189,7 @@ internal class DataInserterTest : BaseDatabaseTest() {
                     )
                 ),
                 DataRow(
-                    "child", listOf(
+                    graph.table("child")!!, listOf(
                         ColumnData("first", Types.VARCHAR, "2"),
                         ColumnData("second", Types.VARCHAR, "2"),
                         ColumnData("value", Types.INTEGER, 2),
@@ -199,14 +201,14 @@ internal class DataInserterTest : BaseDatabaseTest() {
         return DataNode(
             "intermediate_to_child", listOf(
                 DataRow(
-                    "intermediate_to_child", listOf(
+                    graph.table("intermediate_to_child")!!, listOf(
                         ColumnData("intermediate_id", Types.INTEGER, 1),
                         ColumnData("first_child", Types.VARCHAR, "1"),
                         ColumnData("second_child", Types.VARCHAR, "1"),
                     )
                 ),
                 DataRow(
-                    "intermediate_to_child", listOf(
+                    graph.table("intermediate_to_child")!!, listOf(
                         ColumnData("intermediate_id", Types.INTEGER, 1),
                         ColumnData("first_child", Types.VARCHAR, "2"),
                         ColumnData("second_child", Types.VARCHAR, "2"),

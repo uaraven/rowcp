@@ -47,6 +47,10 @@ There is no limitation on what you can have in `WHERE` clause, but it is highly 
 copied to be low (in the 1 to 10 range), as depending on number of relationships, actual number of copied rows can grow
 exponentially and rowcp is not build for speed and efficiency.
 
+### Parameter file
+
+All the options can be stored in a file that passed
+
 ## Limitations
 
 Rowcp is intended to help with testing, not to copy databases. It is highly recommended that seed query select a limited
