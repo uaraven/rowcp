@@ -3,6 +3,8 @@
 
 # Row copy
 
+![](logo.png)
+
 Performs deep row copy from one database to another, including all rows from child and parent tables.
 
 ## Purpose
