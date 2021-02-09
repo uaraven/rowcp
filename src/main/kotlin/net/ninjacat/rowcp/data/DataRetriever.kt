@@ -41,17 +41,16 @@ data class DataNode(
     fun size(): Int = rows.size + before.map { it.size() }.sum() + after.map { it.size() }.sum()
 }
 
-class DataRetriever(params: Args, private val schema: DbSchema) {
+class DataRetriever(val params: Args, private val schema: DbSchema) {
 
     lateinit var sourceConnection: Connection
-    lateinit var schemaGraph: SchemaGraph
     lateinit var processedRelationships: MutableSet<Relationship>
     lateinit var preparedRows: MutableSet<DataRow>
+    private val schemaGraph: SchemaGraph = schema.getSchemaGraph()
     private val chunkSize = params.chunkSize
 
-    fun collectDataToCopy(query: Query, schemaGraph: SchemaGraph): DataNode {
+    fun collectDataToCopy(query: Query): DataNode {
         sourceConnection = schema.connection
-        this.schemaGraph = schemaGraph
 
         log(V_VERBOSE, "Starting data retrieval from @|yellow ${query.table}|@")
         val startingNode = schemaGraph.tables[query.table]!!
@@ -76,8 +75,13 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
                 return@flatMap if (!processedRelationships.contains(it)) { // skip this relationship if we've seen it
                     log(V_VERBOSE, "Processing relationship @|cyan ${parentNode.name}|@ -> @|blue ${node.name}|@")
                     processedRelationships.add(it)
-                    val query = buildParentQuery(it, rows)
-                    listOf(walk(parentNode, query))
+                    if (params.tablesToSkip.contains(it.sourceTable)) {
+                        log(V_NORMAL, "Skipping table @|yellow ${it.sourceTable}|@")
+                        listOf()
+                    } else {
+                        val query = buildParentQuery(it, rows)
+                        listOf(walk(parentNode, query))
+                    }
                 } else {
                     listOf()
                 }
@@ -89,8 +93,13 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
                 return@flatMap if (!processedRelationships.contains(it)) { // skip this relationship if we've seen it
                     log(V_VERBOSE, "Processing relationship @|blue ${node.name}|@ -> @|cyan ${childNode.name}|@")
                     processedRelationships.add(it)
-                    val query = buildChildQuery(it, rows)
-                    listOf(walk(childNode, query))
+                    if (params.tablesToSkip.contains(it.targetTable)) {
+                        log(V_NORMAL, "Skipping table @|yellow ${it.targetTable}|@")
+                        listOf()
+                    } else {
+                        val query = buildChildQuery(it, rows)
+                        listOf(walk(childNode, query))
+                    }
                 } else {
                     listOf()
                 }
@@ -164,7 +173,11 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
 
     private fun applyParametersAndQuery(statement: PreparedStatement, second: List<ColumnData>): ResultSet {
         second.forEachIndexed { index, column ->
-            statement.setObject(index + 1, column.value, column.type)
+            if (column.value == null) {
+                statement.setNull(index + 1, column.type)
+            } else {
+                statement.setObject(index + 1, column.value, column.type)
+            }
         }
         return statement.executeQuery()
     }

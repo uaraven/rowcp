@@ -49,30 +49,23 @@ class Args {
     @Parameter(names = ["-d", "--dry-run"], description = "Perform all actions except for actual data insertion")
     var dryRun: Boolean = false
 
+    @Parameter(names = ["--skip-tables"], description = "Comma-separated list of source tables to be ignored")
+    var skipSourceTables: String? = null
+
+    @Parameter(names = ["--skip-missing-columns"], description = "Ignore columns that do not exist in target database")
+    var skipMissingColumns = false
 
     @Parameter(description = "Query")
     var query: MutableList<String> = mutableListOf()
 
+    val tablesToSkip: Set<String> by lazy { skipSourceTables?.split(",")?.map { it.toLowerCase() }?.toSet() ?: setOf() }
 
     private fun validate(): Args {
         if (showHelp) {
             return this
         }
         if (paramFile != null) {
-            val lines = File(paramFile!!).readLines()
-            val arguments = lines.takeWhile { it.isNotEmpty() }.flatMap {
-                val firstSpace = it.indexOf(' ')
-                if (firstSpace >= 0) {
-                    val paramName = it.substring(0, firstSpace).trim()
-                    val paramValue = it.substring(firstSpace + 1).trim()
-                    listOf(paramName, paramValue)
-                } else {
-                    listOf(it)
-                }
-            }
-            val query = lines.dropWhile { it.isNotEmpty() }.filter { it.isNotEmpty() }
-            val argv = (arguments + query).toTypedArray()
-            val args = parse(*argv)
+            val args = loadArgsFromFile(paramFile!!)
             if (this.dryRun) {
                 args.dryRun = true
             }
@@ -93,7 +86,6 @@ class Args {
         }
         return this
     }
-
 
     fun getQuery(): String = query.joinToString(" ").trim()
 
@@ -123,5 +115,24 @@ class Args {
                 throw e
             }
         }
+
+        private fun loadArgsFromFile(file: String): Args {
+            val lines = File(file).readLines()
+            val arguments = lines.takeWhile { it.isNotEmpty() }.flatMap {
+                val firstSpace = it.indexOf(' ')
+                if (firstSpace >= 0) {
+                    val paramName = it.substring(0, firstSpace).trim()
+                    val paramValue = it.substring(firstSpace + 1).trim()
+                    listOf(paramName, paramValue)
+                } else {
+                    listOf(it)
+                }
+            }
+            val query = lines.dropWhile { it.isNotEmpty() }.filter { it.isNotEmpty() }
+            val argv = (arguments + query).toTypedArray()
+            val args = parse(*argv)
+            return args
+        }
+
     }
 }

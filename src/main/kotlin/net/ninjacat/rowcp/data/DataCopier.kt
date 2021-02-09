@@ -9,20 +9,21 @@ import net.ninjacat.rowcp.query.QueryParser
 class DataCopier(
     private val args: Args,
     private val parser: QueryParser,
-    private val dbSchema: DbSchema,
     private val retriever: DataRetriever,
-    private val inserter: DataInserter
+    private val mapper: DataMapper,
+    private val writer: DataWriter
 ) {
 
     fun copyData() {
         log(V_NORMAL, "Starting data transfer")
         val query = parser.parseQuery(args.getQuery())
-        val schemaGraph = dbSchema.buildSchemaGraph()
-        val dataNode = retriever.collectDataToCopy(query, schemaGraph)
+        val dataNode = retriever.collectDataToCopy(query)
         log(V_NORMAL, "Retrieved @|yellow ${dataNode.size()}|@ rows")
-        val batches = inserter.prepareBatches(dataNode, schemaGraph)
+        log(V_NORMAL, "Mapping rows to target database")
+        val mappedNode = mapper.mapToTarget(dataNode)
+        val batches = writer.prepareBatches(mappedNode)
         log(V_VERBOSE, "Preparing to run @|yellow ${batches.size}|@ INSERT batches")
-        inserter.runBatches(batches)
+        writer.runBatches(batches)
         log(V_NORMAL, "@|green Done|@")
     }
 }

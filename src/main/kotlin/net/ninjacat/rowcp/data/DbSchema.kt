@@ -1,17 +1,19 @@
 package net.ninjacat.rowcp.data
 
-import net.ninjacat.rowcp.Args
 import net.ninjacat.rowcp.V_NORMAL
 import net.ninjacat.rowcp.V_VERBOSE
 import net.ninjacat.rowcp.log
 import java.sql.DriverManager
 
-class DbSchema(args: Args) {
+class DbSchema(jdbcUrl: String, user: String?, password: String?) {
 
-    val connection =
-        DriverManager.getConnection(args.sourceJdbcUrl, args.nullableSourceUser(), args.nullableSourcePassword())!!
+    val connection = DriverManager.getConnection(jdbcUrl, user, password)!!
 
-    fun buildSchemaGraph(): SchemaGraph {
+    private val schema = lazy { buildSchemaGraph() }
+
+    fun getSchemaGraph(): SchemaGraph = schema.value
+
+    private fun buildSchemaGraph(): SchemaGraph {
         log(V_NORMAL, "Building source schema graph")
         val resultSet = connection.metaData.getTables(
             null, null, null, arrayOf("TABLE")

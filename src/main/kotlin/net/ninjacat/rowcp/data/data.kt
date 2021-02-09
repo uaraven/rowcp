@@ -27,7 +27,9 @@ data class Table(
     val inbound: Set<Relationship>,
     val outbound: Set<Relationship>,
     val primaryKey: Set<String>
-)
+) {
+    val columnNames = columns.map { it.name }.toSet()
+}
 
 data class ColumnData(val columnName: String, val type: Int, val value: Any?) {
 
@@ -69,5 +71,7 @@ data class DataRow(val table: Table, val columns: List<ColumnData>) {
     fun isNotEmpty(): Boolean = columns.isNotEmpty()
 
     fun dataOnly(): List<Any?> = columns.map { it.value }
+
+    val columnNames: Set<String> by lazy { columns.map { it.columnName }.toSet() }
 }
 

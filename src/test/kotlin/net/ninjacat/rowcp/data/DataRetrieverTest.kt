@@ -16,7 +16,7 @@ internal class DataRetrieverTest : BaseDatabaseTest() {
     override fun setUp() {
         super.setUp()
         this.args = createArgs(sourceUrl, targetUrl)
-        this.schema = DbSchema(args)
+        this.schema = DbSchema(sourceUrl, null, null)
     }
 
     @Test
@@ -25,7 +25,7 @@ internal class DataRetrieverTest : BaseDatabaseTest() {
 
         val query = QueryParser().parseQuery("SELECT * FROM main WHERE id = 1")
 
-        val data = dataRetriever.collectDataToCopy(query, schema.buildSchemaGraph())
+        val data = dataRetriever.collectDataToCopy(query)
 
         assertThat(data.rows).extracting<List<Any?>> { it.dataOnly() }.contains(listOf(1, "text 1"))
 
@@ -54,7 +54,7 @@ internal class DataRetrieverTest : BaseDatabaseTest() {
 
         val query = QueryParser().parseQuery("SELECT * FROM child WHERE first = 'first 4'")
 
-        val data = dataRetriever.collectDataToCopy(query, schema.buildSchemaGraph())
+        val data = dataRetriever.collectDataToCopy(query)
 
         assertThat(data.rows).extracting<List<Any?>> { it.dataOnly().subList(0, 3) }.contains(
             listOf("first 4", "second 4", 4)
@@ -82,7 +82,7 @@ internal class DataRetrieverTest : BaseDatabaseTest() {
 
         val query = QueryParser().parseQuery("SELECT * FROM intermediate WHERE id = 4")
 
-        val data = dataRetriever.collectDataToCopy(query, schema.buildSchemaGraph())
+        val data = dataRetriever.collectDataToCopy(query)
 
         assertThat(data.rows).extracting<List<Any?>> { it.dataOnly().subList(0, 3) }.contains(
             listOf(4, 3, "content 4")

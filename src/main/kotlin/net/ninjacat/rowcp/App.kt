@@ -24,20 +24,24 @@ fun main(vararg argv: String) {
         Utils.initializeDatabase(args.sourceJdbcUrl)
         Utils.initializeDatabase(args.targetJdbcUrl)
 
-        val dbSchema = DbSchema(args)
-        val retriever = DataRetriever(args, dbSchema)
-        val inserter = DataInserter(args)
-
+        log(V_NORMAL, "Copying rows from @|blue ${args.sourceJdbcUrl}|@ to @|cyan ${args.targetJdbcUrl}|@")
         if (args.dryRun) {
             log(V_NORMAL, "Performing a @|blue dry run|@")
         }
-        val copier = DataCopier(args, parser, dbSchema, retriever, inserter)
+
+        val sourceDbSchema = DbSchema(args.sourceJdbcUrl, args.nullableSourceUser(), args.nullableSourcePassword())
+        val targetDbSchema = DbSchema(args.targetJdbcUrl, args.nullableTargetUser(), args.nullableTargetPassword())
+        val retriever = DataRetriever(args, sourceDbSchema)
+        val mapper = DataMapper(args, targetDbSchema)
+        val inserter = DataWriter(args, targetDbSchema)
+
+        val copier = DataCopier(args, parser, retriever, mapper, inserter)
         copier.copyData()
 
     } catch (ae: ArgsParsingException) {
         // do nothing, help has been shown already
     } catch (e: Exception) {
-        logError(e.message)
+        logError(e, e.message)
     }
 
     AnsiConsole.systemUninstall()

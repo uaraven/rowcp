@@ -2,20 +2,21 @@ package net.ninjacat.rowcp.data
 
 import net.ninjacat.rowcp.Args
 import net.ninjacat.rowcp.V_NORMAL
+import net.ninjacat.rowcp.V_VERBOSE
 import net.ninjacat.rowcp.log
-import java.sql.DriverManager
 
 data class InsertBatch(val statement: String, val data: List<DataRow>)
 
-class DataInserter(private val args: Args) {
+class DataWriter(private val args: Args, schema: DbSchema) {
 
-    private val conn =
-        DriverManager.getConnection(args.targetJdbcUrl, args.nullableTargetUser(), args.nullableTargetPassword())
+    private val conn = schema.connection
+    private val schemaGraph = schema.getSchemaGraph()
 
-    fun prepareBatches(startingNode: DataNode, schemaGraph: SchemaGraph): List<InsertBatch> {
-        val beforeBatches = startingNode.before.flatMap { prepareBatches(it, schemaGraph) }
-        val afterBatches = startingNode.after.flatMap { prepareBatches(it, schemaGraph) }
+    fun prepareBatches(startingNode: DataNode): List<InsertBatch> {
+        val beforeBatches = startingNode.before.flatMap { prepareBatches(it) }
+        val afterBatches = startingNode.after.flatMap { prepareBatches(it) }
 
+        log(V_VERBOSE, "Preprocessing rows for ${startingNode.tableName}")
         val (name, columns, _, _) = schemaGraph.tables[startingNode.tableName]!!
         val baseInsert = "INSERT INTO $name(${columns.joinToString(",") { it.name }})\n" +
                 "VALUES(${columns.joinToString(",") { "?" }})"
