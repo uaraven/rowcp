@@ -10,10 +10,10 @@ Performs deep row copy from one database to another, including all rows from chi
 Ever needed to test something locally on a couple of rows of data from staging/uat/prod data? You only need a couple of
 entities, but the tables are intertwined with all the relationships, so you spend an hour copying all the required data
 from a dozen different tables just to have that two rows that you're interested in. Then next day you need to do the
-same, but with a different rows. And you've shut down your postgres container, so the database is clean, and you need to
+same, but with different rows. And you've shut down your Postgres container, so the database is clean, and you need to
 start from scratch.
 
-Enters `rowcp`. Rowcp has a very limited purpose - copy a couple of rows from the table in one database into a same
+Enters `rowcp`. Rowcp has a very limited purpose - copy a couple of rows from the table in one database into the same
 table in the different database while satisfying all the dependencies. All the rows from the tables that your table has
 a foreign key to, and all the rows they have a foreign key to, and all rows from the tables that have a foreign key
 pointing to these two rows that you're copying and so on.
@@ -21,9 +21,9 @@ pointing to these two rows that you're copying and so on.
 ## Usage
 
 rowcp copies table rows from the source database to the target database. Source and target schemas must be the same.
-Source and target DBMS can be different. You can use rowcp to copy data from mysql to postgres and vice versa.
+Source and target DBMS can be different. You can use rowcp to copy data from MySQL to Postgres and vice versa.
 
-Currently, only postgresql, mysql, mariadb and h2 are supported.
+Currently, only Postgresql, Mysql, MariaDB and h2 are supported.
 
 To copy rows run
 
@@ -31,34 +31,53 @@ To copy rows run
 
 To see all supported command line arguments run rowcp with `--help` parameter.
 
-Absolutely required are `--source-connection` and `--target-connection` that specify JDBC connection string for source
+Required parameters are `--source-connection` and `--target-connection` that specify JDBC connection string for source
 and target databases respectively.
 
-Query is a seed query that returns rows that need to be copied to the target database.
+"Query" parameter is a seed query that returns rows that need to be copied to the target database.
 
-There are some rules this query must abide:
+There are some rules this query must abide by:
 
 - query must be a `SELECT *` query
 - it must have only one table in the `FROM` clause. No joins are allowed.
 - `WHERE` clause must be present to limit the number of rows selected
-- it must be a valid SQL query in the SQL dialect of source database
+- it must be a valid SQL query in the SQL dialect of the source database
 
-There is no limitation on what you can have in `WHERE` clause, but it is highly recommented to limit number of rows
-copied to be low (in the 1 to 10 range), as depending on number of relationships, actual number of copied rows can grow
-exponentially and rowcp is not build for speed and efficiency.
+There is no limitation on what you can have in `WHERE` clause, but it is highly recommended to limit the number of rows
+copied to be small (in the 1 to 10 range), as depending on the number of relationships, the actual number of copied rows
+can grow exponentially and rowcp is not build for speed and efficiency.
+
+### Command line parameters
+
+Or, at least, some of them.
+
+`--skip-tables` - a comma-separated list of tables in the source database that are ignored. Any relationships that start
+or end at this table are also ignored.
+
+`--skip-missing-columns` - ignore columns that do not exist in the target database's tables. Without this option,
+missing columns will be treated as errors.
+
+`--chunk-size` - for reading from the source database limit the number of rows in the `WHERE`. For writing to the target
+database, this sets the size of the `INSERT` batch.
 
 ### Parameter file
 
-All the options can be stored in a file that passed
+All the options can be stored in a file path to which can be passed to `--parameter-file` argument.
+When `--parameter-file` option is used **ALL** of the parameters passed on the command line are ignored, i.e. if you
+pass `--skip-missing-columns` on the command line together with parameter file which does not contain that option, the
+one passed on the command line will be ignored.
+
+The only exception is the `--dry-run` option which takes precedence over the parameter file when passed on the command
+line.
 
 ## Limitations
 
 Rowcp is intended to help with testing, not to copy databases. It is highly recommended that seed query select a limited
 number of rows.
 
-It is assumed that target database is empty or almost empty and there would be no conflicts in the data. Rowcp does not
-try to clean up target tables or update existing data, if there is a duplicate key situation, then copying **will**
+It is assumed that the target database is empty or almost empty and there would be no conflicts in the data. Rowcp does
+not try to clean up target tables or update existing data, if there is a duplicate key situation, then copying **will**
 fail.
 
-Autogenerated fields in target database are not supported. All the autoincremented fields will be inserted as they are
-in the source database.
+Autogenerated fields in the target database are not supported. All the autoincremented fields will be inserted as they
+are in the source database.
