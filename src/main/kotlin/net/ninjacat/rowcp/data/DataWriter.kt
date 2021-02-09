@@ -8,6 +8,7 @@ class DataWriter(private val args: Args, schema: DbSchema) {
 
     private val conn = schema.connection
     private val schemaGraph = schema.getSchemaGraph()
+    private val writtenRows = mutableSetOf<DataRow>()
 
     fun prepareBatches(startingNode: DataNode): List<InsertBatch> {
         val beforeBatches = startingNode.before.flatMap { prepareBatches(it) }
@@ -53,8 +54,13 @@ class DataWriter(private val args: Args, schema: DbSchema) {
         val statement = conn.prepareStatement(batch.statement)
         try {
             batch.data.forEach { row ->
-                row.addParametersForInsert(statement)
-                statement.addBatch()
+                // It is possible to have the same table appear multiple times in the data graph
+                // this check avoids writing the same rows that were already written
+                if (!writtenRows.contains(row)) {
+                    row.addParametersForInsert(statement)
+                    statement.addBatch()
+                    writtenRows.add(row)
+                }
             }
             if (!args.dryRun) {
                 statement.executeBatch()

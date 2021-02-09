@@ -108,7 +108,6 @@ class DataRetriever(val params: Args, private val schema: DbSchema) {
         return DataNode(node.name, rows, before, after)
     }
 
-    // TODO: Make parametrized, maybe
     private fun buildParentQuery(relationship: Relationship, rows: List<DataRow>): SelectQuery {
         val baseQuery =
             with(StringBuilder("SELECT DISTINCT parent.* FROM ${relationship.sourceTable} parent JOIN ${relationship.targetTable} child ON\n")) {

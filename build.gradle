@@ -8,8 +8,8 @@ plugins {
 
 mainClassName = 'net.ninjacat.rowcp.AppKt'
 
-group 'net.ninjacat.dtc'
-version '0.1.0'
+group 'net.ninjacat.rowcp'
+version '0.2.0'
 
 repositories {
     mavenCentral()
