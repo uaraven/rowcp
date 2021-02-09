@@ -21,7 +21,7 @@ class DataMapper(val args: Args, val targetSchema: DbSchema) {
         val targetTable = targetSchema.getSchemaGraph().table(row.tableName())
         val mappedColumns: List<ColumnData>
         if (targetTable == null) {
-            validationErrors.add("Table ${row.tableName()} does not exist in the target database")
+            validationErrors.add("Table '${row.tableName()}' does not exist in the target database")
             mappedColumns = row.columns
         } else {
             mappedColumns = row.columns.filter { targetTable.columnNames.contains(it.columnName) }
@@ -29,10 +29,10 @@ class DataMapper(val args: Args, val targetSchema: DbSchema) {
 
             val unfulfilledTargetColumns = targetTable.columns.filterNot { row.columnNames.contains(it.name) }
             if (unmappedColumns.isNotEmpty() && !args.skipMissingColumns) {
-                validationErrors.add("${if (unmappedColumns.size > 1) "Following columns do" else "Column does"} not exist in table ${row.tableName()} in the target database: $unmappedColumns")
+                validationErrors.add("${if (unmappedColumns.size > 1) "Following columns do" else "Column does"} not exist in table '${row.tableName()}' in the target database: $unmappedColumns")
             }
             if (unfulfilledTargetColumns.isNotEmpty()) {
-                validationErrors.add("${if (unfulfilledTargetColumns.size > 1) "Following columns do" else "Column does"} not exist in table ${row.tableName()} in the source database: $unfulfilledTargetColumns")
+                validationErrors.add("${if (unfulfilledTargetColumns.size > 1) "Following columns do" else "Column does"} not exist in table '${row.tableName()}' in the source database: $unfulfilledTargetColumns")
             }
         }
         if (validationErrors.isNotEmpty()) {

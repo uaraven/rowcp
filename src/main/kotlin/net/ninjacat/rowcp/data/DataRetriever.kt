@@ -73,7 +73,7 @@ class DataRetriever(val params: Args, private val schema: DbSchema) {
             node.inbound.flatMap {
                 val parentNode = schemaGraph.tables[it.sourceTable]!!
                 return@flatMap if (!processedRelationships.contains(it)) { // skip this relationship if we've seen it
-                    log(V_VERBOSE, "Processing relationship @|cyan ${parentNode.name}|@ -> @|blue ${node.name}|@")
+                    log(V_VERBOSE, "Processing relationship @|cyan ${node.name}|@ <- @|blue ${parentNode.name}|@")
                     processedRelationships.add(it)
                     if (params.tablesToSkip.contains(it.sourceTable)) {
                         log(V_NORMAL, "Skipping table @|yellow ${it.sourceTable}|@")
@@ -111,7 +111,7 @@ class DataRetriever(val params: Args, private val schema: DbSchema) {
     // TODO: Make parametrized, maybe
     private fun buildParentQuery(relationship: Relationship, rows: List<DataRow>): SelectQuery {
         val baseQuery =
-            with(StringBuilder("SELECT parent.* FROM ${relationship.sourceTable} parent JOIN ${relationship.targetTable} child ON\n")) {
+            with(StringBuilder("SELECT DISTINCT parent.* FROM ${relationship.sourceTable} parent JOIN ${relationship.targetTable} child ON\n")) {
                 append(
                     relationship.columnMap.joinToString(" AND ", "(", ")") {
                         "parent.${it.sourceColumn} = child.${it.targetColumn}"
@@ -129,7 +129,7 @@ class DataRetriever(val params: Args, private val schema: DbSchema) {
 
     private fun buildChildQuery(relationship: Relationship, rows: List<DataRow>): SelectQuery {
         val baseQuery =
-            with(StringBuilder("SELECT child.* FROM ${relationship.targetTable} child JOIN ${relationship.sourceTable} parent ON\n")) {
+            with(StringBuilder("SELECT DISTINCT child.* FROM ${relationship.targetTable} child JOIN ${relationship.sourceTable} parent ON\n")) {
                 append(
                     relationship.columnMap.joinToString(" AND ", "(", ")") {
                         "parent.${it.sourceColumn} = child.${it.targetColumn}"
@@ -173,11 +173,7 @@ class DataRetriever(val params: Args, private val schema: DbSchema) {
 
     private fun applyParametersAndQuery(statement: PreparedStatement, second: List<ColumnData>): ResultSet {
         second.forEachIndexed { index, column ->
-            if (column.value == null) {
-                statement.setNull(index + 1, column.type)
-            } else {
-                statement.setObject(index + 1, column.value, column.type)
-            }
+            statement.setObject(index + 1, column.value, column.type)
         }
         return statement.executeQuery()
     }

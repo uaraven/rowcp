@@ -90,7 +90,7 @@ internal class DataMapperTest : BaseDatabaseTest() {
         Assertions.assertThatThrownBy {
             mapper.mapToTarget(node)
         }.isInstanceOf(ValidationException::class.java)
-            .hasMessageContaining("not exist in table main in the target database")
+            .hasMessageContaining("not exist in table 'main' in the target database")
     }
 
     @Test
@@ -147,7 +147,7 @@ internal class DataMapperTest : BaseDatabaseTest() {
         Assertions.assertThatThrownBy {
             mapper.mapToTarget(sourceNode)
         }.isInstanceOf(ValidationException::class.java)
-            .hasMessageContaining("not exist in table main in the source database")
+            .hasMessageContaining("not exist in table 'main' in the source database")
     }
 
     private fun makeFakeGraph(tableName: String, columns: List<Column>): SchemaGraph {

@@ -1,9 +1,6 @@
 package net.ninjacat.rowcp.data
 
-import net.ninjacat.rowcp.Args
-import net.ninjacat.rowcp.V_NORMAL
-import net.ninjacat.rowcp.V_VERBOSE
-import net.ninjacat.rowcp.log
+import net.ninjacat.rowcp.*
 
 data class InsertBatch(val statement: String, val data: List<DataRow>)
 
@@ -17,6 +14,9 @@ class DataWriter(private val args: Args, schema: DbSchema) {
         val afterBatches = startingNode.after.flatMap { prepareBatches(it) }
 
         log(V_VERBOSE, "Preprocessing rows for ${startingNode.tableName}")
+        if (schemaGraph.table(startingNode.tableName) == null) {
+            throw RuntimeException("No table '${startingNode.tableName}' in the target database")
+        }
         val (name, columns, _, _) = schemaGraph.tables[startingNode.tableName]!!
         val baseInsert = "INSERT INTO $name(${columns.joinToString(",") { it.name }})\n" +
                 "VALUES(${columns.joinToString(",") { "?" }})"
@@ -49,6 +49,7 @@ class DataWriter(private val args: Args, schema: DbSchema) {
     }
 
     private fun runBatch(batch: InsertBatch) {
+        log(V_SQL, "Executing insert:\n${batch.statement}")
         val statement = conn.prepareStatement(batch.statement)
         try {
             batch.data.forEach { row ->
