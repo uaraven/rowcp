@@ -46,7 +46,7 @@ There are some rules this query must abide by:
 - it must be a valid SQL query in the SQL dialect of the source database
 
 There is no limitation on what you can have in `WHERE` clause, but it is highly recommended to limit the number of rows
-copied to be small (in the 1 to 10 range), as depending on the number of relationships, the actual number of copied rows
+copied to be small (in the 1 to 10 range), as, depending on the number of relationships, the actual number of copied rows
 can grow exponentially and rowcp is not build for speed and efficiency.
 
 ### Command line parameters
