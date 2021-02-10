@@ -45,8 +45,8 @@ jobs:
         include:
           - os: "ubuntu-latest"
             label: "linux"
-          - os: "macos-latest"
-            label: "darwin"
+          #- os: "macos-latest"
+          #  label: "darwin"
     runs-on: ${{matrix.os}}
     steps:
       - name: "Checkout"
