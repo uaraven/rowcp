@@ -1,0 +1,52 @@
+[
+  {
+    "name": "java.lang.ClassLoader",
+    "methods": [
+      {
+        "name": "getPlatformClassLoader",
+        "parameterTypes": []
+      }
+    ]
+  },
+  {
+    "name": "java.lang.NoSuchMethodError"
+  },
+  {
+    "name": "org.fusesource.jansi.internal.CLibrary",
+    "fields": [
+      {
+        "name": "HAVE_ISATTY"
+      },
+      {
+        "name": "HAVE_TTYNAME"
+      },
+      {
+        "name": "TCSADRAIN"
+      },
+      {
+        "name": "TCSAFLUSH"
+      },
+      {
+        "name": "TCSANOW"
+      },
+      {
+        "name": "TIOCGETA"
+      },
+      {
+        "name": "TIOCGETD"
+      },
+      {
+        "name": "TIOCGWINSZ"
+      },
+      {
+        "name": "TIOCSETA"
+      },
+      {
+        "name": "TIOCSETD"
+      },
+      {
+        "name": "TIOCSWINSZ"
+      }
+    ]
+  }
+]

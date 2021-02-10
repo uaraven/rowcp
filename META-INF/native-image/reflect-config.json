@@ -1,0 +1,121 @@
+[
+  {
+    "name": "boolean",
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.beust.jcommander.converters.BooleanConverter",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.beust.jcommander.converters.IntegerConverter",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.beust.jcommander.converters.StringConverter",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.beust.jcommander.validators.NoValidator",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": []
+      }
+    ]
+  },
+  {
+    "name": "com.beust.jcommander.validators.NoValueValidator",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": []
+      }
+    ]
+  },
+  {
+    "name": "int",
+    "allDeclaredFields": true
+  },
+  {
+    "name": "java.io.FilePermission"
+  },
+  {
+    "name": "java.lang.ProcessHandle",
+    "methods": [
+      {
+        "name": "current",
+        "parameterTypes": []
+      },
+      {
+        "name": "pid",
+        "parameterTypes": []
+      }
+    ]
+  },
+  {
+    "name": "java.lang.RuntimePermission"
+  },
+  {
+    "name": "java.lang.String",
+    "allDeclaredFields": true
+  },
+  {
+    "name": "java.net.NetPermission"
+  },
+  {
+    "name": "java.net.SocketPermission"
+  },
+  {
+    "name": "java.net.URLPermission",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": [
+          "java.lang.String",
+          "java.lang.String"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "java.security.AllPermission"
+  },
+  {
+    "name": "java.security.MessageDigestSpi"
+  },
+  {
+    "name": "java.security.SecurityPermission"
+  },
+  {
+    "name": "java.util.PropertyPermission"
+  },
+  {
+    "name": "net.ninjacat.rowcp.Args",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "org.mariadb.jdbc.Driver"
+  },
+  {
+    "name": "org.mariadb.jdbc.util.Options",
+    "fields": [
+      {
+        "name": "password"
+      },
+      {
+        "name": "user"
+      }
+    ]
+  },
+  {
+    "name": "sun.security.provider.SHA",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": []
+      }
+    ]
+  }
+]

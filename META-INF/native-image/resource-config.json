@@ -1,0 +1,22 @@
+{
+  "resources": {
+    "includes": [
+      {
+        "pattern": "\\QMETA-INF/maven/org.fusesource.jansi/jansi/pom.properties\\E"
+      },
+      {
+        "pattern": "\\QMETA-INF/services/java.sql.Driver\\E"
+      },
+      {
+        "pattern": "\\Qmariadb.properties\\E"
+      },
+      {
+        "pattern": "\\Qorg/fusesource/jansi/internal/native/Mac/x86_64/libjansi.jnilib\\E"
+      },
+      {
+        "pattern": "\\Qorg/slf4j/impl/StaticLoggerBinder.class\\E"
+      }
+    ]
+  },
+  "bundles": []
+}
