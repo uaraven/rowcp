@@ -43,7 +43,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
-          file: "rowcp-${{env.VERSION}}.jar"
+          file: "build/libs/rowcp-${{env.VERSION}}.jar"
           type: application/java-archive
 
 
