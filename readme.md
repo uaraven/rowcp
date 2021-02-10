@@ -1,6 +1,4 @@
-[![Build Status](https://github.com/uaraven/rowcp/workflows/CI/badge.svg/)
----
-
+![Build Status](https://github.com/uaraven/rowcp/workflows/CI/badge.svg/)
 # Row copy
 
 ![](logo.png)
