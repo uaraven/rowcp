@@ -37,6 +37,8 @@ jobs:
   build-non-windows-image:
     name: "Build Non-Windows Image"
     needs: build
+    env:
+      GRAALVM_VERSION: 21.0.0
     strategy:
       matrix:
         os: [ "ubuntu-latest", "macos-latest" ]
@@ -44,7 +46,7 @@ jobs:
           - os: "ubuntu-latest"
             label: "linux"
           - os: "macos-latest"
-            label: "mac"
+            label: "darwin"
     runs-on: ${{matrix.os}}
     steps:
       - name: "Checkout"
@@ -54,11 +56,11 @@ jobs:
         with:
           java-version: 11
       - name: "Setup GraalVM Environment"
-        uses: DeLaGuardo/setup-graalvm@2.0
-        with:
-          graalvm-version: "20.1.0.java11"
-      - name: "Install Native Image Plugin"
-        run: gu install native-image
+        run: |
+          curl https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-${{env.GRAALVM_VERSION}}/graalvm-ce-java11-${{matrix.label}}-amd64-${{env.GRAALVM_VERSION}}.tar.gz -o graalvm.tar.gz
+          tar xfvz graalvm.tar.gz
+          echo "GRAALVM_HOME=$PWD/graalvm-ce-java11-${{env.GRAALVM_VERSION}}" >> $GITHUB_ENV
+          ${{env.GRAALVM_HOME}}/bin/gu install native-image
       - name: "Get Version Number"
         run: echo "VERSION=$(./gradlew properties | grep "version:" | awk '{print $2}')" >> $GITHUB_ENV
       - name: "Get JAR Artifact"
@@ -67,7 +69,7 @@ jobs:
           name: "rowcp-${{env.VERSION}}-all.jar"
       - name: "Build Native Image"
         run: |
-          native-image --no-server --no-fallback -H:ReflectionConfigurationResources=reflection-config.json -H:IncludeResources=logback.xml --allow-incomplete-classpath -jar rowcp-${{env.VERSION}}-all.jar
+          ${{env.GRAALVM_HOME}}/bin/native-image --no-server --no-fallback -H:ReflectionConfigurationResources=reflection-config.json -H:IncludeResources=logback.xml --allow-incomplete-classpath -jar rowcp-${{env.VERSION}}-all.jar
       - name: "Prepare Native Image for publishing"
         run: mv rowcp-${{env.VERSION}}-all rowcp-${{env.VERSION}}-${{matrix.label}}
       - name: "Publish Native Image"
