@@ -87,7 +87,6 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: "rowcp-${{env.VERSION}}-${{matrix.label}}"
-          path: "rowcp-${{env.VERSION}}-all"
       - name: "Release Native Image Asset"
         if: success()
         id: upload-release-asset
