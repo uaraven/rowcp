@@ -74,7 +74,8 @@ jobs:
           name: "rowcp-${{env.VERSION}}-all.jar"
       - name: "Build Native Image"
         run: |
-          ${{env.GRAALVM_HOME}}/bin/native-image --no-server --no-fallback -H:ReflectionConfigurationResources=reflection-config.json -H:IncludeResources=logback.xml --allow-incomplete-classpath -jar rowcp-${{env.VERSION}}-all.jar
+          ls -la
+          ${{env.GRAALVM_HOME}}/bin/native-image --no-server --no-fallback -H:ReflectionConfigurationResources=META-INF/native-image/reflect-config.json --allow-incomplete-classpath -jar rowcp-${{env.VERSION}}-all.jar
       - name: "Prepare Native Image for publishing"
         run: mv rowcp-${{env.VERSION}}-all rowcp-${{env.VERSION}}-${{matrix.label}}
       - name: "Publish Native Image"
