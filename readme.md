@@ -62,12 +62,22 @@ missing columns will be treated as errors.
 `--chunk-size` - for reading from the source database limit the number of rows in the `WHERE`. For writing to the target
 database, this sets the size of the `INSERT` batch.
 
+`--source-user` and `--target-user` - username for connecting to the source and target database respectively.  
+You may also pass username as part of the connection string.
+
+`--source-password` and `--target-password`. Password for the source or target database. If the argument to the option
+is not provided then the user will be prompted to type the password. Password may be omitted completely if the database
+does not require one or the password is passed as part of the connection string. For security purposes it is recommended
+not to provide password as CLI or connection string parameter.
+
 ### Parameter file
 
 All the options can be stored in a file path to which can be passed to `--parameter-file` argument.
 
 Parameter file must contain one option per line. The query must be the last option and separated from the rest of the
 options by an empty line.
+
+Lines starting with `#` are treated as comments and ignored.
 
 ```
 --source-connection jdbc:mariadb://some_server:3306
@@ -76,6 +86,7 @@ options by an empty line.
 --target-connection jdbc:mysql://localhost:3306/database
 --target-user mysql
 --target-password mysql
+# don't forget to remove 
 --verbose 2
 --skip-tables table1, table2
 --skip-missing-columns

@@ -23,7 +23,7 @@ class Args {
 
     @Parameter(
         names = ["--source-password"],
-        description = "User password for source database. Not recommended to use",
+        description = "User password for source database",
         password = true
     )
     var sourcePassword: String = ""
@@ -36,7 +36,7 @@ class Args {
 
     @Parameter(
         names = ["--target-password"],
-        description = "User password for target database. Not recommended to use",
+        description = "User password for target database",
         password = true
     )
     var targetPassword: String = ""
@@ -149,17 +149,21 @@ class Args {
 
         private fun loadArgsFromFile(file: String): Args {
             val lines = File(file).readLines()
-            val arguments = lines.takeWhile { it.isNotEmpty() }.flatMap {
-                val firstSpace = it.indexOf(' ')
-                if (firstSpace >= 0) {
-                    val paramName = it.substring(0, firstSpace).trim()
-                    val paramValue = it.substring(firstSpace + 1).trim()
-                    listOf(paramName, paramValue)
-                } else {
-                    listOf(it)
+            val arguments = lines.takeWhile { it.isNotEmpty() }
+                .filterNot { it.trim().startsWith("#") }
+                .flatMap {
+                    val firstSpace = it.indexOf(' ')
+                    if (firstSpace >= 0) {
+                        val paramName = it.substring(0, firstSpace).trim()
+                        val paramValue = it.substring(firstSpace + 1).trim()
+                        listOf(paramName, paramValue)
+                    } else {
+                        listOf(it)
+                    }
                 }
-            }
-            val query = lines.dropWhile { it.isNotEmpty() }.filter { it.isNotEmpty() }
+            val query = lines.dropWhile { it.isNotEmpty() }
+                .filter { it.isNotEmpty() }
+                .filterNot { it.trim().startsWith("#") }
             val argv = (arguments + query).toTypedArray()
             val args = parse(*argv)
             args.paramFile = null
