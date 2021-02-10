@@ -55,9 +55,13 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 11
+      - name: "Download GraalVM"
+        uses: carlosperate/download-file-action@v1.0.3
+        with:
+          file-url: "https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-${{env.GRAALVM_VERSION}}/graalvm-ce-java11-${{matrix.label}}-amd64-${{env.GRAALVM_VERSION}}.tar.gz"
+          file-name: "graalvm.tar.gz"
       - name: "Setup GraalVM Environment"
         run: |
-          curl https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-${{env.GRAALVM_VERSION}}/graalvm-ce-java11-${{matrix.label}}-amd64-${{env.GRAALVM_VERSION}}.tar.gz -o graalvm.tar.gz
           tar xfvz graalvm.tar.gz
           echo "GRAALVM_HOME=$PWD/graalvm-ce-java11-${{env.GRAALVM_VERSION}}" >> $GITHUB_ENV
           ${{env.GRAALVM_HOME}}/bin/gu install native-image
