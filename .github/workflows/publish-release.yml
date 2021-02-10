@@ -58,8 +58,10 @@ jobs:
         include:
           #- os: "ubuntu-latest"
           #  label: "linux"
+          #  graal_home:
           - os: "macos-latest"
             label: "darwin"
+            graal_home: Contents/Home 
     runs-on: ${{matrix.os}}
     steps:
       - name: "Checkout"
@@ -76,7 +78,7 @@ jobs:
       - name: "Prepare GraalVM Environment"
         run: |
           tar xfz graalvm.tar.gz
-          echo "GRAALVM_HOME=$PWD/graalvm-ce-java11-${{env.GRAALVM_VERSION}}" >> $GITHUB_ENV
+          echo "GRAALVM_HOME=$PWD/graalvm-ce-java11-${{env.GRAALVM_VERSION}}/${{matrix.graal_home}}" >> $GITHUB_ENV
       - name: "Install GraalVM native-image"
         run: ${{env.GRAALVM_HOME}}/bin/gu install native-image
       - name: "Get Version Number"
