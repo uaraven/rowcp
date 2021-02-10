@@ -64,6 +64,7 @@ jobs:
         run: |
           tar xfz graalvm.tar.gz
           echo "GRAALVM_HOME=$PWD/graalvm-ce-java11-${{env.GRAALVM_VERSION}}" >> $GITHUB_ENV
+          ls -la
       - name: "Install GraalVM native-image"
         run: ${{env.GRAALVM_HOME}}/bin/gu install native-image
       - name: "Get Version Number"
@@ -72,11 +73,13 @@ jobs:
         uses: actions/download-artifact@v2
         with:
           name: "rowcp-${{env.VERSION}}-all.jar"
-          run: ls -la
+      - name: "Check dir" 
+        run: |
+            echo $PWD
+            ls -la
       - name: "Build Native Image"
         run: |
-          ls -la
-          ${{env.GRAALVM_HOME}}/bin/native-image --no-server --no-fallback -H:ReflectionConfigurationResources=META-INF/native-image/reflect-config.json --allow-incomplete-classpath -jar rowcp-${{env.VERSION}}-all.jar
+          ${{env.GRAALVM_HOME}}/bin/native-image --no-server --no-fallback -H:ReflectionConfigurationResources=META-INF/native-image/reflect-config.json --allow-incomplete-classpath -jar rowcp-${{env.VERSION}}.jar
       - name: "Prepare Native Image for publishing"
         run: mv rowcp-${{env.VERSION}}-all rowcp-${{env.VERSION}}-${{matrix.label}}
       - name: "Publish Native Image"
