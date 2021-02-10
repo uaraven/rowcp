@@ -60,11 +60,12 @@ jobs:
         with:
           file-url: "https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-${{env.GRAALVM_VERSION}}/graalvm-ce-java11-${{matrix.label}}-amd64-${{env.GRAALVM_VERSION}}.tar.gz"
           file-name: "graalvm.tar.gz"
-      - name: "Setup GraalVM Environment"
+      - name: "Prepare GraalVM Environment"
         run: |
-          tar xfvz graalvm.tar.gz
+          tar xfz graalvm.tar.gz
           echo "GRAALVM_HOME=$PWD/graalvm-ce-java11-${{env.GRAALVM_VERSION}}" >> $GITHUB_ENV
-          ${{env.GRAALVM_HOME}}/bin/gu install native-image
+      - name: "Install GraalVM native-image"
+        run: ${{env.GRAALVM_HOME}}/bin/gu install native-image
       - name: "Get Version Number"
         run: echo "VERSION=$(./gradlew properties | grep "version:" | awk '{print $2}')" >> $GITHUB_ENV
       - name: "Get JAR Artifact"
