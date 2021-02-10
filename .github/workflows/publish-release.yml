@@ -36,15 +36,15 @@ jobs:
           name: rowcp-${{env.VERSION}}
           path: build/libs/rowcp-${{env.VERSION}}.jar
 
-      - name: "Release Jar Asset"
-        if: success()
-        id: upload-release-asset
-        uses: gacts/upload-to-release@master
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-        with:
-          file: "build/libs/rowcp-${{env.VERSION}}.jar"
-          type: application/java-archive
+#       - name: "Release Jar Asset"
+#         if: success()
+#         id: upload-release-asset
+#         uses: gacts/upload-to-release@master
+#         env:
+#           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+#         with:
+#           file: "build/libs/rowcp-${{env.VERSION}}.jar"
+#           type: application/java-archive
 
 
   build-non-windows-image:
