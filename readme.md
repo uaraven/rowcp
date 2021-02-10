@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/uaraven/rowcp.svg?token=y16Lh7TzbqmZRHfBeyUv&branch=main)](https://travis-ci.com/uaraven/rowcp)
+[![Build Status](https://github.com/uaraven/rowcp/workflows/CI/badge.svg/)
 ---
 
 # Row copy
