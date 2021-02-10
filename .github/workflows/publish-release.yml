@@ -108,9 +108,7 @@ jobs:
 
       - name: "Release Native Image Asset"
         if: success()
-        uses: Shopify/upload-to-release@v1
+        uses: AButler/upload-release-assets@v2.0
         with:
-          name: rowcp-${{env.VERSION}}-${{matrix.label}}
-          path: rowcp-${{env.VERSION}}-${{matrix.label}}
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          content-type: application/octet-stream
+          files: rowcp-${{env.VERSION}}-${{matrix.label}}
+          repo-token: ${{secrets.GITHUB_TOKEN}}
