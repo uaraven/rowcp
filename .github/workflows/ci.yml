@@ -32,3 +32,13 @@ jobs:
       # Runs a set of commands using the runners shell
       - name: Build with Gradle
         run: ./gradlew clean build
+        
+      - name: "Get Version Number"
+        run: |
+           echo "::set-env name=VERSION::$(./gradlew properties -q | grep "version:" | awk '{print $2}')"
+
+      - name: Upload jar file
+        uses: actions/upload-artifact@v2.2.2
+        with:
+          name: rowcp-${{env.VERSION}}-all.jar
+          path: build/libs/rowcp-${{env.VERSION}}.jar 
