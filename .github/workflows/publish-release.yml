@@ -79,7 +79,7 @@ jobs:
       - name: "Release Native Image Asset"
         if: success()
         id: upload-release-asset
-        uses: ggacts/upload-to-release@master
+        uses: gacts/upload-to-release@master
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
         with:
