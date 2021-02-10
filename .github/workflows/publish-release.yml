@@ -66,44 +66,51 @@ jobs:
     steps:
       - name: "Checkout"
         uses: actions/checkout@v2
+      
       - name: "Setup Java 11"
         uses: actions/setup-java@v1
         with:
           java-version: 11
+          
       - name: "Download GraalVM"
         uses: carlosperate/download-file-action@v1.0.3
         with:
           file-url: "https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-${{env.GRAALVM_VERSION}}/graalvm-ce-java11-${{matrix.label}}-amd64-${{env.GRAALVM_VERSION}}.tar.gz"
           file-name: "graalvm.tar.gz"
+          
       - name: "Prepare GraalVM Environment"
         run: |
           tar xfz graalvm.tar.gz
           echo "GRAALVM_HOME=$PWD/graalvm-ce-java11-${{env.GRAALVM_VERSION}}/${{matrix.graal_home}}" >> $GITHUB_ENV
+          
       - name: "Install GraalVM native-image"
         run: ${{env.GRAALVM_HOME}}/bin/gu install native-image
+        
       - name: "Get Version Number"
         run: echo "VERSION=$(./gradlew properties | grep "version:" | awk '{print $2}')" >> $GITHUB_ENV
+
       - name: "Get JAR Artifact"
         uses: actions/download-artifact@v2
         with:
           name: "rowcp-${{env.VERSION}}"
+          
       - name: "Build Native Image"
         run: |
           ${{env.GRAALVM_HOME}}/bin/native-image -H:ReflectionConfigurationFiles=META-INF/native-image/reflect-config.json --no-fallback --allow-incomplete-classpath -H:+AddAllCharsets --enable-all-security-services -jar rowcp-${{env.VERSION}}.jar
           mv rowcp-${{env.VERSION}} rowcp-${{env.VERSION}}-${{matrix.label}}
-          ls -la
+
       - name: "Publish Native Image"
         if: success()
         uses: actions/upload-artifact@v2
         with:
           name: "rowcp-${{env.VERSION}}-${{matrix.label}}"
           path: "rowcp-${{env.VERSION}}-${{matrix.label}}"
+
       - name: "Release Native Image Asset"
         if: success()
-        id: upload-release-asset
-        uses: gacts/upload-to-release@master
-        env:
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+        uses: Shopify/upload-to-release@v1
         with:
-          file: "rowcp-${{env.VERSION}}-${{matrix.label}}"
-          type: application/octet-stream
+          name: rowcp-${{env.VERSION}}-${{matrix.label}}
+          path: rowcp-${{env.VERSION}}-${{matrix.label}}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          content-type: application/octet-stream
