@@ -54,12 +54,12 @@ jobs:
       GRAALVM_VERSION: 21.0.0
     strategy:
       matrix:
-        os: [ "ubuntu-latest" ]
+        os: [ "macos-latest" ]
         include:
-          - os: "ubuntu-latest"
-            label: "linux"
-          #- os: "macos-latest"
-          #  label: "darwin"
+          #- os: "ubuntu-latest"
+          #  label: "linux"
+          - os: "macos-latest"
+            label: "darwin"
     runs-on: ${{matrix.os}}
     steps:
       - name: "Checkout"
