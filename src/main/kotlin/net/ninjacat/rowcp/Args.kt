@@ -53,8 +53,14 @@ class Args {
     @Parameter(names = ["--skip-tables"], description = "Comma-separated list of source tables to be ignored")
     var skipSourceTables: String? = null
 
-    @Parameter(names = ["--skip-missing-columns"], description = "Ignore columns that do not exist in target database")
+    @Parameter(names = ["--skip-unknown-columns"], description = "Ignore columns that do not exist in target database")
     var skipMissingColumns = false
+
+    @Parameter(
+        names = ["--update"],
+        description = "Allow updating rows where primary key already exist in the target databsae"
+    )
+    var allowUpdate = false
 
     @Parameter(description = "Query")
     var query: MutableList<String> = mutableListOf()

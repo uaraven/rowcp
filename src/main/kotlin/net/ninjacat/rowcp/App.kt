@@ -33,9 +33,13 @@ fun main(vararg argv: String) {
         val targetDbSchema = DbSchema(args.targetJdbcUrl, args.nullableTargetUser(), args.nullableTargetPassword())
         val retriever = DataRetriever(args, sourceDbSchema)
         val mapper = DataMapper(args, targetDbSchema)
-        val inserter = DataInserter(args, targetDbSchema)
+        val writer: DataWriter = if (args.allowUpdate) {
+            DataUpdater(args, targetDbSchema)
+        } else {
+            DataInserter(args, targetDbSchema)
+        }
 
-        val copier = DataCopier(args, parser, retriever, mapper, inserter)
+        val copier = DataCopier(args, parser, retriever, mapper, writer)
         copier.copyData()
 
     } catch (ae: ArgsParsingException) {

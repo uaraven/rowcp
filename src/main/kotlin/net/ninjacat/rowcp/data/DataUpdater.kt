@@ -2,6 +2,18 @@ package net.ninjacat.rowcp.data
 
 import net.ninjacat.rowcp.*
 import net.ninjacat.rowcp.data.Utils.use
+import java.sql.PreparedStatement
+
+data class RowUpdate(val statement: String, val data: DataRow, val update: Boolean) {
+    fun setStatementParameters(statement: PreparedStatement) {
+        if (update) {
+            data.addParametersForUpdate(statement)
+        } else {
+            data.addParametersForInsert(statement)
+        }
+    }
+
+}
 
 class DataUpdater(private val args: Args, schema: DbSchema) : DataWriter {
 
@@ -9,48 +21,57 @@ class DataUpdater(private val args: Args, schema: DbSchema) : DataWriter {
     private val schemaGraph = schema.getSchemaGraph()
     private val writtenRows = mutableSetOf<DataRow>()
 
-    fun doesAlreadyExist(row: DataRow): Boolean {
+    private fun doesAlreadyExist(row: DataRow): Boolean {
         val checkStatement =
-            conn.prepareStatement("select count(*) from ${row.tableName()} WHERE ${row.asParametrizedFilter()}")
+            conn.prepareStatement("select count(*) from ${row.tableName()} t WHERE ${row.asParametrizedFilter("t")}")
         return checkStatement.use {
             row.addParametersForSelect(this)
-            checkStatement.executeQuery().use {
+            executeQuery().use {
                 (next() && getInt(1) > 0)
             }
         }
     }
 
-    fun prepareBatches(startingNode: DataNode): List<InsertBatch> {
-        val beforeBatches = startingNode.before.flatMap { prepareBatches(it) }
-        val afterBatches = startingNode.after.flatMap { prepareBatches(it) }
+    fun prepareUpdates(startingNode: DataNode): List<RowUpdate> {
+        val beforeUpdates = startingNode.before.flatMap { prepareUpdates(it) }
+        val afterUpdates = startingNode.after.flatMap { prepareUpdates(it) }
 
         log(V_VERBOSE, "Preprocessing rows for ${startingNode.tableName}")
         if (schemaGraph.table(startingNode.tableName) == null) {
             throw RuntimeException("No table '${startingNode.tableName}' in the target database")
         }
         val (name, columns, _, _) = schemaGraph.tables[startingNode.tableName]!!
-        val baseInsert = "INSERT INTO $name(${columns.joinToString(",") { it.name }})\n" +
-                "VALUES(${columns.joinToString(",") { "?" }})"
 
-        val batches = startingNode.rows.chunked(args.chunkSize).map { InsertBatch(baseInsert, it) }
+        val updates = startingNode.rows.map { row ->
+            if (doesAlreadyExist(row)) {
+                RowUpdate("UPDATE $name SET\n" +
+                        row.nonKeyColumns().joinToString(", ") { "${it.columnName} = ?" } + "\nWHERE\n" +
+                        row.asParametrizedFilter(""), row, true)
+            } else {
+                RowUpdate(
+                    "INSERT INTO $name(${columns.joinToString(",") { it.name }})\n" +
+                            "VALUES(${columns.joinToString(",") { "?" }})", row, false
+                )
+            }
+        }
 
-        return beforeBatches + batches + afterBatches
+        return beforeUpdates + updates + afterUpdates
     }
 
-    fun runBatches(batches: List<InsertBatch>) {
+    fun runUpdates(updates: List<RowUpdate>) {
         conn.autoCommit = false
 
         var lastPcnt = 0
         try {
-            batches.forEachIndexed { index, batch ->
-                runBatch(batch)
-                val pcnt = index * 100 / batches.size
+            updates.forEachIndexed { index, update ->
+                runUpdate(update)
+                val pcnt = index * 100 / updates.size
                 if (pcnt - lastPcnt > 10) {
-                    log(V_NORMAL, "Inserted @|blue ${pcnt}|@%")
+                    log(V_NORMAL, "Updated @|blue ${pcnt}|@%")
                     lastPcnt = pcnt
                 }
             }
-            log(V_NORMAL, "Inserted @|blue 100|@%")
+            log(V_NORMAL, "Updated @|blue 100|@%")
             conn.commit()
         } catch (e: Exception) {
             conn.rollback()
@@ -59,29 +80,24 @@ class DataUpdater(private val args: Args, schema: DbSchema) : DataWriter {
         conn.autoCommit = true
     }
 
-    private fun runBatch(batch: InsertBatch) {
-        log(V_SQL, "Executing insert:\n${batch.statement}")
-        val statement = conn.prepareStatement(batch.statement)
-        try {
-            batch.data.forEach { row ->
-                // It is possible to have the same table appear multiple times in the data graph
-                // this check avoids writing the same rows that were already written
-                if (!writtenRows.contains(row)) {
-                    row.addParametersForInsert(statement)
-                    statement.addBatch()
-                    writtenRows.add(row)
-                }
+    private fun runUpdate(update: RowUpdate) {
+        log(V_SQL, "Executing statement:\n${update.statement}")
+        conn.prepareStatement(update.statement).use {
+            if (!writtenRows.contains(update.data)) {
+                update.setStatementParameters(this)
+                writtenRows.add(update.data)
             }
             if (!args.dryRun) {
-                statement.executeBatch()
+                val count = executeUpdate()
+                log(V_SQL, "Updated $count records")
             }
-        } finally {
-            statement.close()
         }
     }
 
     override fun writeData(startingNode: DataNode) {
-
+        val updates = prepareUpdates(startingNode)
+        log(V_VERBOSE, "Preparing to run @|yellow ${updates.size}|@ INSERT/UPDATE statements")
+        runUpdates(updates)
     }
 }
 

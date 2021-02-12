@@ -1,6 +1,7 @@
 package net.ninjacat.rowcp.data
 
 import net.ninjacat.rowcp.Args
+import net.ninjacat.rowcp.data.Utils.use
 import net.ninjacat.rowcp.query.BaseDatabaseTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -83,16 +84,14 @@ internal class DataInserterTest : BaseDatabaseTest() {
     }
 
     private fun getRowCount(tableName: String): Int {
-        val statement = targetDb.createStatement()
-        val resultSet = statement.executeQuery("SELECT count(*) FROM $tableName")
-        try {
-            if (resultSet.next()) {
-                return resultSet.getInt(1)
+        return targetDb.createStatement().use {
+            executeQuery("SELECT count(*) FROM $tableName").use {
+                if (resultSet.next()) {
+                    resultSet.getInt(1)
+                } else {
+                    0
+                }
             }
-            return 0
-        } finally {
-            statement.close()
-            resultSet.close()
         }
     }
 
@@ -203,15 +202,15 @@ internal class DataInserterTest : BaseDatabaseTest() {
                 DataRow(
                     graph.table("intermediate_to_child")!!, listOf(
                         ColumnData("intermediate_id", Types.INTEGER, 1),
-                        ColumnData("first_child", Types.VARCHAR, "1"),
-                        ColumnData("second_child", Types.VARCHAR, "1"),
+                        ColumnData("child_first", Types.VARCHAR, "1"),
+                        ColumnData("child_first", Types.VARCHAR, "1"),
                     )
                 ),
                 DataRow(
                     graph.table("intermediate_to_child")!!, listOf(
                         ColumnData("intermediate_id", Types.INTEGER, 1),
-                        ColumnData("first_child", Types.VARCHAR, "2"),
-                        ColumnData("second_child", Types.VARCHAR, "2"),
+                        ColumnData("child_first", Types.VARCHAR, "2"),
+                        ColumnData("child_first", Types.VARCHAR, "2"),
                     )
                 )
             ), listOf(intermediate, child), listOf()

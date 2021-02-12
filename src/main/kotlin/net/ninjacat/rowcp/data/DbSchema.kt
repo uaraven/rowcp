@@ -2,7 +2,9 @@ package net.ninjacat.rowcp.data
 
 import net.ninjacat.rowcp.V_NORMAL
 import net.ninjacat.rowcp.V_VERBOSE
+import net.ninjacat.rowcp.data.Utils.use
 import net.ninjacat.rowcp.log
+import java.sql.DatabaseMetaData.bestRowTemporary
 import java.sql.DriverManager
 
 class DbSchema(jdbcUrl: String, user: String?, password: String?) {
@@ -34,15 +36,26 @@ class DbSchema(jdbcUrl: String, user: String?, password: String?) {
     }
 
     private fun getPrimaryKey(tableName: String?): Set<String> {
-        val resultSet = connection.metaData.getPrimaryKeys(null, null, tableName)
-        try {
+        return connection.metaData.getPrimaryKeys(null, null, tableName).use {
             val results = mutableListOf<String>()
-            while (resultSet.next()) {
-                results.add(resultSet.getString("COLUMN_NAME").toLowerCase())
+            while (next()) {
+                results.add(getString("COLUMN_NAME").toLowerCase())
             }
-            return results.toSet()
-        } finally {
-            resultSet.close()
+            if (results.isEmpty()) {
+                getUniqueKey(tableName)
+            } else {
+                results.toSet()
+            }
+        }
+    }
+
+    private fun getUniqueKey(tableName: String?): Set<String> {
+        return connection.metaData.getBestRowIdentifier(null, null, tableName!!, bestRowTemporary, false).use {
+            val results = mutableListOf<String>()
+            if (next()) {
+                results.add(getString("COLUMN_NAME").toLowerCase())
+            }
+            results.toSet()
         }
     }
 

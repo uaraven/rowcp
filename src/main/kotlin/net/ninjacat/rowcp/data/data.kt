@@ -61,6 +61,9 @@ data class DataRow(val table: Table, val columns: List<ColumnData>) {
             }
     }
 
+    /**
+     * All columns that are part of the primary key
+     */
     fun addParametersForSelect(statement: PreparedStatement) {
         columns
             .filter { table.primaryKey.isEmpty() || table.primaryKey.contains(it.columnName) }
@@ -69,6 +72,29 @@ data class DataRow(val table: Table, val columns: List<ColumnData>) {
             }
     }
 
+    /**
+     * All columns that are not part of the primary key for SET and then primary key for WHERE
+     */
+    fun addParametersForUpdate(statement: PreparedStatement) {
+        var index = 1
+        columns
+            .filterNot { table.primaryKey.contains(it.columnName) }
+            .forEachIndexed { _, column ->
+                column.addParameter(index, statement)
+                index++
+            }
+
+        columns
+            .filter { table.primaryKey.isEmpty() || table.primaryKey.contains(it.columnName) }
+            .forEachIndexed { _, column ->
+                column.addParameter(index, statement)
+                index++
+            }
+    }
+
+    /**
+     * All columns
+     */
     fun addParametersForInsert(statement: PreparedStatement) {
         columns
             .forEachIndexed { index, column ->
@@ -83,6 +109,9 @@ data class DataRow(val table: Table, val columns: List<ColumnData>) {
     fun isNotEmpty(): Boolean = columns.isNotEmpty()
 
     fun dataOnly(): List<Any?> = columns.map { it.value }
+
+    // List of columns that are not in the primary key
+    fun nonKeyColumns(): List<ColumnData> = columns.filterNot { table.primaryKey.contains(it.columnName) }
 
     val columnNames: Set<String> by lazy { columns.map { it.columnName }.toSet() }
 }

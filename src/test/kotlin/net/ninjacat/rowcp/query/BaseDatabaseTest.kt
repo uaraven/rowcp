@@ -6,6 +6,7 @@ import liquibase.database.DatabaseFactory
 import liquibase.database.jvm.JdbcConnection
 import liquibase.resource.ClassLoaderResourceAccessor
 import net.ninjacat.rowcp.Args
+import net.ninjacat.rowcp.data.Utils.use
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import java.sql.Connection
@@ -48,13 +49,23 @@ open class BaseDatabaseTest {
         runLiquibase(targetDb, "/liquibase/target-changeset.xml")
     }
 
-    private fun cleanupTables(targetDb: Connection, vararg tables: String) {
+    private fun cleanupTables(conn: Connection, vararg tables: String) {
         tables.forEach {
-            val statement = targetDb.createStatement()
-            try {
-                statement.executeUpdate("DELETE FROM $it")
-            } finally {
-                statement.close()
+            conn.createStatement().use {
+                executeUpdate("DELETE FROM $it")
+
+            }
+        }
+    }
+
+    fun readValues(conn: Connection, s: String): List<Any?> {
+        return conn.createStatement().use {
+            executeQuery(s).use {
+                val result = mutableListOf<Any>()
+                while (next()) {
+                    result.add(getObject(1))
+                }
+                result.toList()
             }
         }
     }
