@@ -1,13 +1,14 @@
 package net.ninjacat.rowcp.data
 
 import net.ninjacat.rowcp.Args
+import net.ninjacat.rowcp.data.Utils.use
 import net.ninjacat.rowcp.query.BaseDatabaseTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.sql.Types
 
-internal class DataWriterTest : BaseDatabaseTest() {
+internal class DataInserterTest : BaseDatabaseTest() {
 
     private lateinit var graph: SchemaGraph
     private lateinit var schema: DbSchema
@@ -25,7 +26,7 @@ internal class DataWriterTest : BaseDatabaseTest() {
     internal fun testCreateBatches() {
         val node = prepareDataNode()
 
-        val inserter = DataWriter(args, schema)
+        val inserter = DataInserter(args, schema)
         val batches = inserter.prepareBatches(node)
 
         assertThat(batches).hasSize(4)
@@ -42,7 +43,7 @@ internal class DataWriterTest : BaseDatabaseTest() {
         val node = prepareManyBatches()
         args.chunkSize = 20
 
-        val inserter = DataWriter(args, schema)
+        val inserter = DataInserter(args, schema)
         val batches = inserter.prepareBatches(node)
 
         assertThat(batches).hasSize(5)
@@ -54,7 +55,7 @@ internal class DataWriterTest : BaseDatabaseTest() {
         val node = prepareManyBatches()
         args.chunkSize = 20
 
-        val inserter = DataWriter(args, schema)
+        val inserter = DataInserter(args, schema)
         val batches = inserter.prepareBatches(node)
         inserter.runBatches(batches)
 
@@ -67,7 +68,7 @@ internal class DataWriterTest : BaseDatabaseTest() {
     internal fun testInsertBatchesAllTables() {
         val node = prepareRealDataNode()
 
-        val inserter = DataWriter(args, schema)
+        val inserter = DataInserter(args, schema)
         val batches = inserter.prepareBatches(node)
         inserter.runBatches(batches)
 
@@ -83,16 +84,14 @@ internal class DataWriterTest : BaseDatabaseTest() {
     }
 
     private fun getRowCount(tableName: String): Int {
-        val statement = targetDb.createStatement()
-        val resultSet = statement.executeQuery("SELECT count(*) FROM $tableName")
-        try {
-            if (resultSet.next()) {
-                return resultSet.getInt(1)
+        return targetDb.createStatement().use {
+            executeQuery("SELECT count(*) FROM $tableName").use {
+                if (resultSet.next()) {
+                    resultSet.getInt(1)
+                } else {
+                    0
+                }
             }
-            return 0
-        } finally {
-            statement.close()
-            resultSet.close()
         }
     }
 
@@ -203,15 +202,15 @@ internal class DataWriterTest : BaseDatabaseTest() {
                 DataRow(
                     graph.table("intermediate_to_child")!!, listOf(
                         ColumnData("intermediate_id", Types.INTEGER, 1),
-                        ColumnData("first_child", Types.VARCHAR, "1"),
-                        ColumnData("second_child", Types.VARCHAR, "1"),
+                        ColumnData("child_first", Types.VARCHAR, "1"),
+                        ColumnData("child_first", Types.VARCHAR, "1"),
                     )
                 ),
                 DataRow(
                     graph.table("intermediate_to_child")!!, listOf(
                         ColumnData("intermediate_id", Types.INTEGER, 1),
-                        ColumnData("first_child", Types.VARCHAR, "2"),
-                        ColumnData("second_child", Types.VARCHAR, "2"),
+                        ColumnData("child_first", Types.VARCHAR, "2"),
+                        ColumnData("child_first", Types.VARCHAR, "2"),
                     )
                 )
             ), listOf(intermediate, child), listOf()

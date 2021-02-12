@@ -17,4 +17,12 @@ object Utils {
         Class.forName(driver)
     }
 
+    fun <T : AutoCloseable, R> T.use(block: T.() -> R): R {
+        try {
+            return block(this)
+        } finally {
+            this.close()
+        }
+    }
+
 }
