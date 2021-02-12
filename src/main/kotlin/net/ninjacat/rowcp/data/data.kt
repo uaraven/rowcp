@@ -61,6 +61,14 @@ data class DataRow(val table: Table, val columns: List<ColumnData>) {
             }
     }
 
+    fun addParametersForSelect(statement: PreparedStatement) {
+        columns
+            .filter { table.primaryKey.isEmpty() || table.primaryKey.contains(it.columnName) }
+            .forEachIndexed { index, column ->
+                column.addParameter(index + 1, statement)
+            }
+    }
+
     fun addParametersForInsert(statement: PreparedStatement) {
         columns
             .forEachIndexed { index, column ->

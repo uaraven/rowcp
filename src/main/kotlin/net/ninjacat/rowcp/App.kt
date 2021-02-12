@@ -33,7 +33,7 @@ fun main(vararg argv: String) {
         val targetDbSchema = DbSchema(args.targetJdbcUrl, args.nullableTargetUser(), args.nullableTargetPassword())
         val retriever = DataRetriever(args, sourceDbSchema)
         val mapper = DataMapper(args, targetDbSchema)
-        val inserter = DataWriter(args, targetDbSchema)
+        val inserter = DataInserter(args, targetDbSchema)
 
         val copier = DataCopier(args, parser, retriever, mapper, inserter)
         copier.copyData()

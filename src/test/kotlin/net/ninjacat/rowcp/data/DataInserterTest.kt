@@ -7,7 +7,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.sql.Types
 
-internal class DataWriterTest : BaseDatabaseTest() {
+internal class DataInserterTest : BaseDatabaseTest() {
 
     private lateinit var graph: SchemaGraph
     private lateinit var schema: DbSchema
@@ -25,7 +25,7 @@ internal class DataWriterTest : BaseDatabaseTest() {
     internal fun testCreateBatches() {
         val node = prepareDataNode()
 
-        val inserter = DataWriter(args, schema)
+        val inserter = DataInserter(args, schema)
         val batches = inserter.prepareBatches(node)
 
         assertThat(batches).hasSize(4)
@@ -42,7 +42,7 @@ internal class DataWriterTest : BaseDatabaseTest() {
         val node = prepareManyBatches()
         args.chunkSize = 20
 
-        val inserter = DataWriter(args, schema)
+        val inserter = DataInserter(args, schema)
         val batches = inserter.prepareBatches(node)
 
         assertThat(batches).hasSize(5)
@@ -54,7 +54,7 @@ internal class DataWriterTest : BaseDatabaseTest() {
         val node = prepareManyBatches()
         args.chunkSize = 20
 
-        val inserter = DataWriter(args, schema)
+        val inserter = DataInserter(args, schema)
         val batches = inserter.prepareBatches(node)
         inserter.runBatches(batches)
 
@@ -67,7 +67,7 @@ internal class DataWriterTest : BaseDatabaseTest() {
     internal fun testInsertBatchesAllTables() {
         val node = prepareRealDataNode()
 
-        val inserter = DataWriter(args, schema)
+        val inserter = DataInserter(args, schema)
         val batches = inserter.prepareBatches(node)
         inserter.runBatches(batches)
 

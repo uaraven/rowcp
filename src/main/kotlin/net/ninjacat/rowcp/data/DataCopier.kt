@@ -2,7 +2,6 @@ package net.ninjacat.rowcp.data
 
 import net.ninjacat.rowcp.Args
 import net.ninjacat.rowcp.V_NORMAL
-import net.ninjacat.rowcp.V_VERBOSE
 import net.ninjacat.rowcp.log
 import net.ninjacat.rowcp.query.QueryParser
 
@@ -21,9 +20,7 @@ class DataCopier(
         log(V_NORMAL, "Retrieved @|yellow ${dataNode.size()}|@ rows")
         log(V_NORMAL, "Mapping rows to target database")
         val mappedNode = mapper.mapToTarget(dataNode)
-        val batches = writer.prepareBatches(mappedNode)
-        log(V_VERBOSE, "Preparing to run @|yellow ${batches.size}|@ INSERT batches")
-        writer.runBatches(batches)
+        writer.writeData(mappedNode)
         log(V_NORMAL, "@|green Done|@")
     }
 }
