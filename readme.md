@@ -58,10 +58,9 @@ or end at this table are also ignored.
 missing columns will be treated as errors.
 
 `--update` - allows updating target database if the row with the same primary key already exists. This is considerably
-slower than default insert mode and so not recommended.
+slower than default insert mode and so is not recommended.
 
-`--chunk-size` - for reading from the source database limit the number of rows in the `WHERE`. For writing to the target
-database, this sets the size of the `INSERT` batch.
+`--chunk-size` - When reading from the source database this will limit the number of conditions in generated queries. This helps to avoid generating queries that are too large to be handled by the source server. When writing to the target database, this will set the size of the `INSERT` batches.
 
 `--source-user` and `--target-user` - username for connecting to the source and target database respectively.  
 You may also pass username as part of the connection string.
@@ -73,12 +72,12 @@ not to provide password as CLI or connection string parameter.
 
 ### Parameter file
 
-All the options can be stored in a file path to which can be passed to `--parameter-file` argument.
+All the options can be stored in a file, path to which can be passed to `--parameter-file` argument.
 
 Parameter file must contain one option per line. The query must be the last option and separated from the rest of the
 options by an empty line.
 
-Lines starting with `#` are treated as comments and ignored.
+Lines starting with `#` are treated as comments and are ignored.
 
 ```
 --source-connection jdbc:mariadb://some_server:3306
@@ -90,7 +89,7 @@ Lines starting with `#` are treated as comments and ignored.
 # don't forget to remove 
 --verbose 2
 --skip-tables table1, table2
---skip-missing-columns
+--skip-unknown-columns
 
 SELECT * FROM table3 WHERE id in (1,2,3)
 AND name IS NOT NULL;
