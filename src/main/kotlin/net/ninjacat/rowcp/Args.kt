@@ -15,7 +15,10 @@ class Args {
     @Parameter(names = ["-h", "--help"], description = "Show this mesage")
     var showHelp: Boolean = false
 
-    @Parameter(names = ["-s", "--source-connection"], description = "Source JDBC connection string")
+    @Parameter(
+        names = ["-s", "--source-connection"],
+        description = "Source JDBC connection string or a file path starting with 'file:' schema"
+    )
     var sourceJdbcUrl: String = ""
 
     @Parameter(names = ["--source-user"], description = "User name for source database")
@@ -65,7 +68,7 @@ class Args {
     @Parameter(description = "Query")
     var query: MutableList<String> = mutableListOf()
 
-    val tablesToSkip: Set<String> by lazy { skipSourceTables?.split(",")?.map { it.toLowerCase() }?.toSet() ?: setOf() }
+    val tablesToSkip: Set<String> by lazy { skipSourceTables?.split(",")?.map { it.lowercase() }?.toSet() ?: setOf() }
 
     private fun validate(): Args {
         if (showHelp) {

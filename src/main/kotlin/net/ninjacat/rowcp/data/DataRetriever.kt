@@ -3,7 +3,10 @@ package net.ninjacat.rowcp.data
 import net.ninjacat.rowcp.*
 import net.ninjacat.rowcp.query.Query
 import java.lang.Integer.min
-import java.sql.*
+import java.sql.Connection
+import java.sql.PreparedStatement
+import java.sql.ResultSet
+import java.sql.SQLSyntaxErrorException
 
 data class SelectRelationship(
     val sourceTableName: String,
@@ -192,7 +195,7 @@ class DataRetriever(val params: Args, private val schema: DbSchema) {
     private fun toDataRow(rs: ResultSet, table: Table): DataRow {
         val result = mutableListOf<ColumnData>()
         for (i in 1..rs.metaData.columnCount) {
-            val columnName = rs.metaData.getColumnName(i).toLowerCase()
+            val columnName = rs.metaData.getColumnName(i).lowercase()
             val columnType = rs.metaData.getColumnType(i)
             val value = rs.getObject(i)
             result.add(ColumnData(columnName, columnType, value))

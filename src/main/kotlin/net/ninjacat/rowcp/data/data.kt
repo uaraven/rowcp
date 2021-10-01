@@ -1,6 +1,11 @@
 package net.ninjacat.rowcp.data
 
 import java.sql.PreparedStatement
+import java.sql.Types
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 
 data class Column(val name: String, val type: Int)
 
@@ -18,7 +23,7 @@ data class SchemaGraph(
     val tables: Map<String, Table>
 ) {
 
-    fun table(name: String): Table? = tables[name.toLowerCase()]
+    fun table(name: String): Table? = tables[name.lowercase()]
 }
 
 data class Table(
@@ -34,6 +39,24 @@ data class Table(
 data class ColumnData(val columnName: String, val type: Int, val value: Any?) {
 
     private fun isNull(): Boolean = value == null
+
+    private fun asDate(): LocalDate = (value as java.sql.Date).toLocalDate()
+
+    private fun asTime(): LocalTime = (value as java.sql.Time).toLocalTime()
+
+    private fun asTimestamp(): LocalDateTime = (value as java.sql.Timestamp).toLocalDateTime()
+
+    private fun asSqlString(): String = value.toString().replace("'", "''")
+
+    fun asSqlText(): String = when {
+        isNull() -> "NULL"
+        type == Types.CHAR || type == Types.VARCHAR || type == Types.NCHAR || type == Types.NVARCHAR
+                || type == Types.LONGVARCHAR || type == Types.LONGNVARCHAR || type == Types.CLOB -> "'${asSqlString()}'"
+        type == Types.DATE -> "'${asDate().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)}'"
+        type == Types.TIME || type == Types.TIME_WITH_TIMEZONE -> "'${asTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)}'"
+        type == Types.TIMESTAMP || type == Types.TIMESTAMP_WITH_TIMEZONE -> "'${asTimestamp().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)}'"
+        else -> value.toString()
+    }
 
     fun parametrizedCondition(alias: String): String = when {
         isNull() -> "$alias.$columnName IS NULL"

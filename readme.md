@@ -43,9 +43,20 @@ There are some rules this query must abide by:
 - `WHERE` clause must be present to limit the number of rows selected
 - it must be a valid SQL query in the SQL dialect of the source database
 
-There is no limitation on what you can have in `WHERE` clause, but it is highly recommended to limit the number of rows
-copied to be small (in the 1 to 10 range), as, depending on the number of relationships, the actual number of copied rows
-can grow exponentially and rowcp is not build for speed and efficiency.
+There is no limitation on what you can have in `WHERE` clause, but it is highly recommended limiting the number of rows
+copied to be small (in the 1 to 10 range), as, depending on the number of relationships, the actual number of copied
+rows can grow exponentially and rowcp is not build for speed and efficiency.
+
+### Exporting source data as SQL statements
+
+Instead of inserting/updating the target database, rowcp can create SQL statements for each row from the source
+database.
+
+If `--target-connection` starts with `file:` schema instead of `jdbc:` schema, then the rest of the connection line will
+be used as a name of the file to which the `INSERT INTO` statements will be written.
+
+Some options, such as `--target-user`, `--target-password` and `--update` are ignored when the target is a file. This
+mode is experimental, please review the generated SQL statements before executing them.
 
 ### Command line parameters
 
