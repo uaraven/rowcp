@@ -1,7 +1,7 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.kotlin.jvm' version '1.4.30'
-    id 'com.github.johnrengelman.shadow' version '6.1.0'
+    id 'org.jetbrains.kotlin.jvm' version '1.5.31'
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
     id 'application'
     id 'antlr'
 }
@@ -9,23 +9,23 @@ plugins {
 mainClassName = 'net.ninjacat.rowcp.AppKt'
 
 group 'net.ninjacat.rowcp'
-version '0.3.0'
+version '0.4.0'
 
 repositories {
     mavenCentral()
 }
 
 ext {
-    antlrVersion = '4.9.1'
-    jansiVersion = '2.2.0'
-    jcommanderVersion = '1.78'
-    mariaDbVersion = '2.7.2'
-    postgresVersion = '42.2.18'
+    antlrVersion = '4.9.2'
+    jansiVersion = '2.3.4'
+    jcommanderVersion = '1.81'
+    mariaDbVersion = '2.7.3'
+    postgresVersion = '42.2.24'
     h2Version = '1.4.200'
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.5.31'
 
     antlr "org.antlr:antlr4:$antlrVersion"
     implementation "org.antlr:antlr4-runtime:$antlrVersion"
@@ -37,27 +37,44 @@ dependencies {
     implementation "org.postgresql:postgresql:$postgresVersion"
     implementation "com.h2database:h2:$h2Version"
 
-    implementation 'ch.qos.logback:logback-classic:1.2.3'
+    implementation 'ch.qos.logback:logback-classic:1.2.6'
 
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
-    testImplementation "org.assertj:assertj-core:3.18.1"
-    testImplementation 'org.liquibase:liquibase-core:4.2.2'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+    testImplementation 'org.assertj:assertj-core:3.21.0'
+    testImplementation 'org.liquibase:liquibase-core:4.4.3'
     testImplementation 'com.h2database:h2:1.4.200'
-    testImplementation 'io.mockk:mockk:1.10.5'
+    testImplementation 'io.mockk:mockk:1.12.0'
 }
 
 generateGrammarSource {
     arguments += ["-visitor"]
 }
 
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(11))
+    }
+}
+
 compileJava.dependsOn generateGrammarSource
-compileKotlin.dependsOn generateGrammarSource
+
+compileKotlin {
+    dependsOn generateGrammarSource
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+}
 
 test {
     useJUnitPlatform()
 }
 
+jar {
+    archiveClassifier.set('non-bin')
+}
+
 shadowJar {
+    dependsOn jar
     archiveClassifier.set('')
 }

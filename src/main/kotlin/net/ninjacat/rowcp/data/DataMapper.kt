@@ -4,9 +4,9 @@ import net.ninjacat.rowcp.Args
 
 class ValidationException(message: String) : RuntimeException(message)
 
-class DataMapper(val args: Args, val targetSchema: DbSchema) {
+class DataMapper(val args: Args, val targetSchema: DbSchema) : Mapper {
 
-    fun mapToTarget(source: DataNode): DataNode {
+    override fun mapToTarget(source: DataNode): DataNode {
         val before = source.before.map { mapToTarget(it) }
         val after = source.after.map { mapToTarget(it) }
 

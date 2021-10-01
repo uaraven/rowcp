@@ -3,6 +3,8 @@ package net.ninjacat.rowcp
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import net.ninjacat.rowcp.data.*
+import net.ninjacat.rowcp.data.export.SqlMapper
+import net.ninjacat.rowcp.data.export.SqlWriter
 import net.ninjacat.rowcp.query.QueryParser
 import org.fusesource.jansi.AnsiConsole
 import org.slf4j.LoggerFactory
@@ -30,13 +32,12 @@ fun main(vararg argv: String) {
         }
 
         val sourceDbSchema = DbSchema(args.sourceJdbcUrl, args.nullableSourceUser(), args.nullableSourcePassword())
-        val targetDbSchema = DbSchema(args.targetJdbcUrl, args.nullableTargetUser(), args.nullableTargetPassword())
         val retriever = DataRetriever(args, sourceDbSchema)
-        val mapper = DataMapper(args, targetDbSchema)
-        val writer: DataWriter = if (args.allowUpdate) {
-            DataUpdater(args, targetDbSchema)
+
+        val (mapper, writer: DataWriter) = if (args.targetJdbcUrl.startsWith("file:")) {
+            getTargetFileProcessors(args)
         } else {
-            DataInserter(args, targetDbSchema)
+            getTargetJdbcProcessors(args)
         }
 
         val copier = DataCopier(args, parser, retriever, mapper, writer)
@@ -49,4 +50,23 @@ fun main(vararg argv: String) {
     }
 
     AnsiConsole.systemUninstall()
+}
+
+private fun getTargetJdbcProcessors(args: Args): Pair<Mapper, DataWriter> {
+    log(V_NORMAL, "Copying @|blue JDBC|@ target")
+    val targetDbSchema = DbSchema(args.targetJdbcUrl, args.nullableTargetUser(), args.nullableTargetPassword())
+    val mapper = DataMapper(args, targetDbSchema)
+    val writer: DataWriter = if (args.allowUpdate) {
+        DataUpdater(args, targetDbSchema)
+    } else {
+        DataInserter(args, targetDbSchema)
+    }
+    return Pair(mapper, writer)
+}
+
+private fun getTargetFileProcessors(args: Args): Pair<Mapper, DataWriter> {
+    log(V_NORMAL, "Copying @|blue SQL file|@ target")
+    val mapper = SqlMapper()
+    val writer = SqlWriter(args.targetJdbcUrl)
+    return Pair(mapper, writer)
 }

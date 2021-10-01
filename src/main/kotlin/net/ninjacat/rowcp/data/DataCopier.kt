@@ -9,7 +9,7 @@ class DataCopier(
     private val args: Args,
     private val parser: QueryParser,
     private val retriever: DataRetriever,
-    private val mapper: DataMapper,
+    private val mapper: Mapper,
     private val writer: DataWriter
 ) {
 

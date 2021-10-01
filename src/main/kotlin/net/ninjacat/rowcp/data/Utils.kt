@@ -5,6 +5,9 @@ import java.net.URI
 object Utils {
 
     fun initializeDatabase(jdbcUrl: String) {
+        if (jdbcUrl.startsWith("file:")) {
+            return
+        }
         if (!jdbcUrl.startsWith("jdbc:")) {
             throw RuntimeException("Invalid JDBC connection string: @|yellow $jdbcUrl")
         }

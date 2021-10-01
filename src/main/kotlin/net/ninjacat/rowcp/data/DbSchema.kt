@@ -27,7 +27,7 @@ class DbSchema(jdbcUrl: String, user: String?, password: String?) {
             val children = getChildren(tableName)
             val columns = getTableColumns(tableName)
             val pk = getPrimaryKey(tableName)
-            val table = Table(tableName.toLowerCase(), columns, parents, children, pk)
+            val table = Table(tableName.lowercase(), columns, parents, children, pk)
             tables[table.name] = table
         }
         log(V_VERBOSE, "Collected metadata of @|yellow ${tables.size}|@ tables")
@@ -39,7 +39,7 @@ class DbSchema(jdbcUrl: String, user: String?, password: String?) {
         return connection.metaData.getPrimaryKeys(null, null, tableName).use {
             val results = mutableListOf<String>()
             while (next()) {
-                results.add(getString("COLUMN_NAME").toLowerCase())
+                results.add(getString("COLUMN_NAME").lowercase())
             }
             if (results.isEmpty()) {
                 getUniqueKey(tableName)
@@ -53,7 +53,7 @@ class DbSchema(jdbcUrl: String, user: String?, password: String?) {
         return connection.metaData.getBestRowIdentifier(null, null, tableName!!, bestRowTemporary, false).use {
             val results = mutableListOf<String>()
             if (next()) {
-                results.add(getString("COLUMN_NAME").toLowerCase())
+                results.add(getString("COLUMN_NAME").lowercase())
             }
             results.toSet()
         }
@@ -67,13 +67,13 @@ class DbSchema(jdbcUrl: String, user: String?, password: String?) {
         val targetColumns = mutableListOf<String>()
         try {
             while (resultSet.next()) {
-                val targetTableName = resultSet.getString("FKTABLE_NAME").toLowerCase()
-                val targetColumn = resultSet.getString("FKCOLUMN_NAME").toLowerCase()
-                val sourceColumn = resultSet.getString("PKCOLUMN_NAME").toLowerCase()
+                val targetTableName = resultSet.getString("FKTABLE_NAME").lowercase()
+                val targetColumn = resultSet.getString("FKCOLUMN_NAME").lowercase()
+                val sourceColumn = resultSet.getString("PKCOLUMN_NAME").lowercase()
                 if (target != targetTableName) {
                     if (target != "") {
                         results.add(
-                            Relationship(tableName.toLowerCase(), target, zipColumns(thisColumns, targetColumns))
+                            Relationship(tableName.lowercase(), target, zipColumns(thisColumns, targetColumns))
                         )
                         thisColumns.clear()
                         targetColumns.clear()
@@ -85,7 +85,7 @@ class DbSchema(jdbcUrl: String, user: String?, password: String?) {
                 targetColumns.add(targetColumn)
             }
             if (target != "") {
-                results.add(Relationship(tableName.toLowerCase(), target, zipColumns(thisColumns, targetColumns)))
+                results.add(Relationship(tableName.lowercase(), target, zipColumns(thisColumns, targetColumns)))
             }
             return results.toSet()
         } finally {
@@ -101,13 +101,13 @@ class DbSchema(jdbcUrl: String, user: String?, password: String?) {
         val targetColumns = mutableListOf<String>()
         try {
             while (resultSet.next()) {
-                val sourceTableName = resultSet.getString("PKTABLE_NAME").toLowerCase()
-                val sourceColumn = resultSet.getString("PKCOLUMN_NAME").toLowerCase()
-                val targetColumn = resultSet.getString("FKCOLUMN_NAME").toLowerCase()
+                val sourceTableName = resultSet.getString("PKTABLE_NAME").lowercase()
+                val sourceColumn = resultSet.getString("PKCOLUMN_NAME").lowercase()
+                val targetColumn = resultSet.getString("FKCOLUMN_NAME").lowercase()
                 if (source != sourceTableName) {
                     if (source != "") {
                         results.add(
-                            Relationship(source, tableName.toLowerCase(), zipColumns(sourceColumns, targetColumns))
+                            Relationship(source, tableName.lowercase(), zipColumns(sourceColumns, targetColumns))
                         )
                         sourceColumns.clear()
                         targetColumns.clear()
@@ -119,7 +119,7 @@ class DbSchema(jdbcUrl: String, user: String?, password: String?) {
                 targetColumns.add(targetColumn)
             }
             if (source != "") {
-                results.add(Relationship(source, tableName.toLowerCase(), zipColumns(sourceColumns, targetColumns)))
+                results.add(Relationship(source, tableName.lowercase(), zipColumns(sourceColumns, targetColumns)))
             }
             return results.toSet()
         } finally {
@@ -132,7 +132,7 @@ class DbSchema(jdbcUrl: String, user: String?, password: String?) {
         val columns = mutableListOf<Column>()
         try {
             while (resultSet.next()) {
-                val name = resultSet.getString("COLUMN_NAME").toLowerCase()
+                val name = resultSet.getString("COLUMN_NAME").lowercase()
                 val type = resultSet.getInt("DATA_TYPE")
                 columns.add(Column(name, type))
             }
