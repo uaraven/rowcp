@@ -8,11 +8,6 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLSyntaxErrorException
 
-enum class WalkDirection {
-    CHILDREN,
-    BOTH
-}
-
 data class SelectRelationship(
     val sourceTableName: String,
     val targetTableName: String,
@@ -77,35 +72,37 @@ class DataRetriever(val params: Args, private val schema: DbSchema) {
         log(V_NORMAL, "Reading table @|yellow ${node.name}|@")
         val rows = retrieveRows(node, selectQuery)
         log(V_VERBOSE, "Retrieved @|yellow ${rows.size}|@ rows")
-        val before: List<DataNode> = if (rows.isNotEmpty()) {
-            node.inbound.flatMap {
-                val parentNode = schemaGraph.tables[it.sourceTable]!!
-                return@flatMap if (!processedRelationships.contains(it)) { // skip this relationship if we've seen it
-                    log(V_VERBOSE, "Processing relationship @|cyan ${node.name}|@ <- @|blue ${parentNode.name}|@")
-                    processedRelationships.add(it)
-                    if (params.tablesToSkip.contains(it.sourceTable)) {
-                        log(V_NORMAL, "Skipping table @|yellow ${it.sourceTable}|@")
-                        listOf()
+        val before: List<DataNode> =
+            if (rows.isNotEmpty() && (walkDirection == WalkDirection.BOTH || walkDirection == WalkDirection.PARENTS)) {
+                node.inbound.flatMap {
+                    val parentNode = schemaGraph.tables[it.sourceTable]!!
+                    return@flatMap if (!processedRelationships.contains(it)) { // skip this relationship if we've seen it
+                        log(V_VERBOSE, "Processing relationship @|cyan ${node.name}|@ <- @|blue ${parentNode.name}|@")
+                        processedRelationships.add(it)
+                        if (params.tablesToSkip.contains(it.sourceTable)) {
+                            log(V_NORMAL, "Skipping table @|yellow ${it.sourceTable}|@")
+                            listOf()
+                        } else {
+                            val query = buildParentQuery(it, rows)
+                            listOf(walk(parentNode, query, WalkDirection.PARENTS))
+                        }
                     } else {
-                        val query = buildParentQuery(it, rows)
-                        listOf(walk(parentNode, query, WalkDirection.CHILDREN))
+                        listOf()
                     }
-                } else {
-                    listOf()
                 }
-            }
-        } else listOf()
-        val after: List<DataNode> = if (rows.isNotEmpty()) {
-            node.outbound.flatMap {
-                val childNode = schemaGraph.tables[it.targetTable]!!
-                return@flatMap if (!processedRelationships.contains(it)) { // skip this relationship if we've seen it
-                    log(V_VERBOSE, "Processing relationship @|blue ${node.name}|@ -> @|cyan ${childNode.name}|@")
-                    processedRelationships.add(it)
-                    if (params.tablesToSkip.contains(it.targetTable)) {
-                        log(V_NORMAL, "Skipping table @|yellow ${it.targetTable}|@")
-                        listOf()
-                    } else {
-                        val query = buildChildQuery(it, rows)
+            } else listOf()
+        val after: List<DataNode> =
+            if (rows.isNotEmpty() && (walkDirection == WalkDirection.CHILDREN || walkDirection == WalkDirection.BOTH)) {
+                node.outbound.flatMap {
+                    val childNode = schemaGraph.tables[it.targetTable]!!
+                    return@flatMap if (!processedRelationships.contains(it)) { // skip this relationship if we've seen it
+                        log(V_VERBOSE, "Processing relationship @|blue ${node.name}|@ -> @|cyan ${childNode.name}|@")
+                        processedRelationships.add(it)
+                        if (params.tablesToSkip.contains(it.targetTable)) {
+                            log(V_NORMAL, "Skipping table @|yellow ${it.targetTable}|@")
+                            listOf()
+                        } else {
+                            val query = buildChildQuery(it, rows)
                         listOf(walk(childNode, query, walkDirection))
                     }
                 } else {
