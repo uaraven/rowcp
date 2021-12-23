@@ -32,7 +32,26 @@ class DbSchema(jdbcUrl: String, user: String?, password: String?) {
         }
         log(V_VERBOSE, "Collected metadata of @|yellow ${tables.size}|@ tables")
 
+        buildReverseParents(tables)
+
         return SchemaGraph(tables.toMap())
+    }
+
+    /**
+     * Some databases (looking at you MySql) do not return anything in getImportedKeys(). To properly handle
+     * incoming relationships we need to scan all the tables and check if any of the tables act as a parent
+     * for others
+     */
+    private fun buildReverseParents(tables: MutableMap<String, Table>) {
+        tables.forEach { (name, table) ->
+            table.outbound.forEach { relation ->
+                val child = tables[relation.targetTable]
+                val parent = child!!.findParent(name)
+                if (parent == null) { // we're missing a relationship here!
+                    child.inbound.add(Relationship(relation.sourceTable, relation.targetTable, relation.columnMap))
+                }
+            }
+        }
     }
 
     private fun getPrimaryKey(tableName: String?): Set<String> {
@@ -93,7 +112,7 @@ class DbSchema(jdbcUrl: String, user: String?, password: String?) {
         }
     }
 
-    private fun getParents(tableName: String): Set<Relationship> {
+    private fun getParents(tableName: String): MutableSet<Relationship> {
         val resultSet = connection.metaData.getImportedKeys(null, null, tableName)
         val results = mutableListOf<Relationship>()
         var source = ""
@@ -121,7 +140,7 @@ class DbSchema(jdbcUrl: String, user: String?, password: String?) {
             if (source != "") {
                 results.add(Relationship(source, tableName.lowercase(), zipColumns(sourceColumns, targetColumns)))
             }
-            return results.toSet()
+            return results.toMutableSet()
         } finally {
             resultSet.close()
         }

@@ -53,7 +53,7 @@ class SqlWriter(targetUrl: String) : DataWriter {
             val columnNames = row.columns.map { it.columnName }
             val columnValue = row.columns.map { it.asSqlText() }
             "INSERT INTO ${row.table.name}(${columnNames.joinToString(", ")})\n" +
-                    "VALUES(${columnValue.joinToString(", ")})"
+                    "VALUES(${columnValue.joinToString(", ")});"
         }
 
         return beforeUpdates + updates + afterUpdates

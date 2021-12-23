@@ -29,10 +29,12 @@ data class SchemaGraph(
 data class Table(
     val name: String,
     val columns: List<Column>,
-    val inbound: Set<Relationship>,
+    val inbound: MutableSet<Relationship>,
     val outbound: Set<Relationship>,
     val primaryKey: Set<String>
 ) {
+    fun findParent(parentTableName: String): Relationship? = inbound.find { it.sourceTable == parentTableName }
+
     val columnNames = columns.map { it.name }.toSet()
 }
 
