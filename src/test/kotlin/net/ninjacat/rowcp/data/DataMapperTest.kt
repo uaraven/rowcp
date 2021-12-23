@@ -154,7 +154,7 @@ internal class DataMapperTest : BaseDatabaseTest() {
         val main1Table = Table(
             tableName,
             columns,
-            setOf(),
+            mutableSetOf(),
             setOf(),
             setOf("id")
         )
