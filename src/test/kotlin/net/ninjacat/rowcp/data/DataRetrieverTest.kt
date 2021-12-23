@@ -46,6 +46,11 @@ internal class DataRetrieverTest : BaseDatabaseTest() {
             listOf("first 1", "second 1", 1),
             listOf("first 2", "second 2", 2)
         )
+
+        val subMainData = findTableDataInNode("sub_main", data)
+        assertThat(subMainData).extracting<List<Any?>> { it.dataOnly().subList(0, 3) }.contains(
+            listOf(1, "k1", 1)
+        )
     }
 
     @Test
@@ -74,6 +79,9 @@ internal class DataRetrieverTest : BaseDatabaseTest() {
         assertThat(childData).extracting<List<Any?>> { it.dataOnly() }.contains(
             listOf(3, "text 3")
         )
+
+        val subMainData = findTableDataInNode("sub_main", data)
+        assertThat(subMainData).extracting<List<Any?>> { it.dataOnly() }.isEmpty()
     }
 
     @Test
@@ -104,6 +112,9 @@ internal class DataRetrieverTest : BaseDatabaseTest() {
         assertThat(childData).extracting<List<Any?>> { it.dataOnly() }.contains(
             listOf(3, "text 3")
         )
+
+        val subMainData = findTableDataInNode("sub_main", data)
+        assertThat(subMainData).extracting<List<Any?>> { it.dataOnly() }.isEmpty()
     }
 
     private fun findTableDataInNode(tableName: String, node: DataNode): List<DataRow> {

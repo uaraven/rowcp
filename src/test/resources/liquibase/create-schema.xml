@@ -23,6 +23,23 @@
       <column name="updated_on" type="timestamp"/>
     </createTable>
 
+    <createTable tableName="sub_main">
+      <column name="main_id" type="int">
+      </column>
+      <column name="key" type="varchar(20)">
+        <constraints primaryKey="true"/>
+      </column>
+      <column name="value" type="int"/>
+      <column name="updated_on" type="timestamp"/>
+    </createTable>
+
+    <addForeignKeyConstraint
+        constraintName="sub_main_main_fk"
+        baseColumnNames="main_id"
+        baseTableName="sub_main"
+        referencedTableName="main"
+        referencedColumnNames="id"/>
+
     <createTable tableName="intermediate">
       <column name="id" type="int" autoIncrement="true">
         <constraints primaryKey="true"/>

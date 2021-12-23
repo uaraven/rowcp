@@ -8,6 +8,11 @@ import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLSyntaxErrorException
 
+enum class WalkDirection {
+    CHILDREN,
+    BOTH
+}
+
 data class SelectRelationship(
     val sourceTableName: String,
     val targetTableName: String,
@@ -65,10 +70,10 @@ class DataRetriever(val params: Args, private val schema: DbSchema) {
         processedRelationships = mutableSetOf()
         preparedRows = mutableSetOf()
 
-        return walk(startingNode, select)
+        return walk(startingNode, select, WalkDirection.BOTH)
     }
 
-    fun walk(node: Table, selectQuery: SelectQuery): DataNode {
+    fun walk(node: Table, selectQuery: SelectQuery, walkDirection: WalkDirection): DataNode {
         log(V_NORMAL, "Reading table @|yellow ${node.name}|@")
         val rows = retrieveRows(node, selectQuery)
         log(V_VERBOSE, "Retrieved @|yellow ${rows.size}|@ rows")
@@ -83,7 +88,7 @@ class DataRetriever(val params: Args, private val schema: DbSchema) {
                         listOf()
                     } else {
                         val query = buildParentQuery(it, rows)
-                        listOf(walk(parentNode, query))
+                        listOf(walk(parentNode, query, WalkDirection.CHILDREN))
                     }
                 } else {
                     listOf()
@@ -101,7 +106,7 @@ class DataRetriever(val params: Args, private val schema: DbSchema) {
                         listOf()
                     } else {
                         val query = buildChildQuery(it, rows)
-                        listOf(walk(childNode, query))
+                        listOf(walk(childNode, query, walkDirection))
                     }
                 } else {
                     listOf()

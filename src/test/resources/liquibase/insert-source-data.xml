@@ -106,4 +106,17 @@
     </insert>
   </changeSet>
 
+  <changeSet id="src-5" author="me">
+    <insert tableName="sub_main">
+      <column name="main_id" value="1"/>
+      <column name="key" value="k1"/>
+      <column name="value" value="1"/>
+    </insert>
+    <insert tableName="sub_main">
+      <column name="main_id" value="2"/>
+      <column name="key" value="k2"/>
+      <column name="value" value="10"/>
+    </insert>
+  </changeSet>
+
 </databaseChangeLog>

@@ -53,7 +53,6 @@ open class BaseDatabaseTest {
         tables.forEach {
             conn.createStatement().use {
                 executeUpdate("DELETE FROM $it")
-
             }
         }
     }
