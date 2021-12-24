@@ -2,10 +2,9 @@ package net.ninjacat.rowcp
 
 import com.beust.jcommander.JCommander
 import com.beust.jcommander.Parameter
+import net.ninjacat.rowcp.query.ArgsParsingException
 import java.io.File
 import kotlin.system.exitProcess
-
-class ArgsParsingException : Exception("")
 
 class Args {
 

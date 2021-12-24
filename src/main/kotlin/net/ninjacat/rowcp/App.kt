@@ -6,6 +6,7 @@ import net.ninjacat.rowcp.data.*
 import net.ninjacat.rowcp.data.export.SqlMapper
 import net.ninjacat.rowcp.data.export.SqlWriter
 import net.ninjacat.rowcp.data.visualizer.CopyVisualizer
+import net.ninjacat.rowcp.query.ArgsParsingException
 import net.ninjacat.rowcp.query.QueryParser
 import org.fusesource.jansi.AnsiConsole
 import org.slf4j.LoggerFactory

@@ -92,8 +92,8 @@ class CopyVisualizer(
     }
 
     private fun print(table: TreeTable, offset: Int): String {
-        val parentLines = printPrev(table, offset)
-        val childLines = printNext(table, offset)
+        val parentLines = printPrev(table, offset + 1)
+        val childLines = printNext(table, offset + 1)
         return (parentLines + "${" ".repeat(offset)}${table.tableName}\n" + childLines).replace("\n\n", "\n")
     }
 }
