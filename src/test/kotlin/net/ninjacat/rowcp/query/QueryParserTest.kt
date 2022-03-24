@@ -36,6 +36,16 @@ internal class QueryParserTest {
     }
 
     @Test
+    internal fun testParseQueryWithTableAlias() {
+        val parser = QueryParser()
+        val q = parser.parseQuery("SELECT distinct * FROM Table T1 WHERE T1.A = 10 AND (b = 20 OR C LIKE 'Text%')")
+
+        assertThat(q.table).isEqualTo("Table")
+        assertThat(q.filter).isEqualTo("T1.A = 10 AND (b = 20 OR C LIKE 'Text%')")
+        assertThat(q.selectDistinct).isTrue
+    }
+
+    @Test
     internal fun testFailWhenProjectionIsNotAll() {
         val parser = QueryParser()
         assertThatThrownBy {
@@ -48,6 +58,14 @@ internal class QueryParserTest {
         val parser = QueryParser()
         assertThatThrownBy {
             parser.parseQuery("SELECT * FROM Table, Table2")
+        }.isInstanceOf(QueryParsingException::class.java)
+    }
+
+    @Test
+    internal fun testFailWhenMultipleTablesWithAliases() {
+        val parser = QueryParser()
+        assertThatThrownBy {
+            parser.parseQuery("SELECT * FROM Table T1, Table2 T2")
         }.isInstanceOf(QueryParsingException::class.java)
     }
 
