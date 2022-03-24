@@ -11,10 +11,6 @@ class QueryListener(private val src: String) : RsqlBaseListener() {
 
     var distinct = false
 
-    override fun exitSelectStatement(ctx: RsqlParser.SelectStatementContext?) {
-        super.exitSelectStatement(ctx)
-    }
-
     override fun exitWhere(ctx: RsqlParser.WhereContext?) {
         super.exitWhere(ctx)
         val start = ctx!!.anything().getStart().startIndex

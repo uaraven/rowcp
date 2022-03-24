@@ -12,7 +12,6 @@ data class RowUpdate(val statement: String, val data: DataRow, val update: Boole
             data.addParametersForInsert(statement)
         }
     }
-
 }
 
 class DataUpdater(private val args: Args, schema: DbSchema) : DataWriter {

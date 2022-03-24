@@ -48,11 +48,9 @@ fun main(vararg argv: String) {
                 getTargetJdbcProcessors(args)
             }
 
-
             val copier = DataCopier(args, parser, retriever, mapper, writer)
             copier.copyData()
         }
-
     } catch (ae: ArgsParsingException) {
         // do nothing, help has been shown already
     } catch (e: Exception) {

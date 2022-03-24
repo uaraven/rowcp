@@ -43,7 +43,7 @@ class CopyVisualizer(
         log(V_NORMAL, text)
     }
 
-    fun walk(tableName: String, walkDirection: WalkDirection): TreeTable {
+    private fun walk(tableName: String, walkDirection: WalkDirection): TreeTable {
         val schemaGraph = schema.getSchemaGraph()
         val node = schemaGraph.table(tableName)!!
         val before: List<TreeTable> =

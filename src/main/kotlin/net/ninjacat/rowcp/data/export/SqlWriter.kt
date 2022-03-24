@@ -44,7 +44,7 @@ class SqlWriter(targetUrl: String) : DataWriter {
         printer.flush()
     }
 
-    fun prepareUpdates(startingNode: DataNode): List<String> {
+    private fun prepareUpdates(startingNode: DataNode): List<String> {
         val beforeUpdates = startingNode.before.flatMap { prepareUpdates(it) }
         val afterUpdates = startingNode.after.flatMap { prepareUpdates(it) }
 
