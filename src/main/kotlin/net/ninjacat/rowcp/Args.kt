@@ -2,17 +2,16 @@ package net.ninjacat.rowcp
 
 import com.beust.jcommander.JCommander
 import com.beust.jcommander.Parameter
+import net.ninjacat.rowcp.query.ArgsParsingException
 import java.io.File
 import kotlin.system.exitProcess
-
-class ArgsParsingException : Exception("")
 
 class Args {
 
     @Parameter(names = ["-p", "--parameter-file"], description = "Read parameters from file")
     var paramFile: String? = null
 
-    @Parameter(names = ["-h", "--help"], description = "Show this mesage")
+    @Parameter(names = ["-h", "--help"], description = "Show this message")
     var showHelp: Boolean = false
 
     @Parameter(
@@ -65,6 +64,12 @@ class Args {
     )
     var allowUpdate = false
 
+    @Parameter(
+        names = ["--show-copy-tree"],
+        description = "Print list of tables that will be considered for copying"
+    )
+    var showTree = false
+
     @Parameter(description = "Query")
     var query: MutableList<String> = mutableListOf()
 
@@ -109,6 +114,7 @@ class Args {
         result.skipMissingColumns = override(params.skipMissingColumns, false, this.skipMissingColumns)!!
         result.dryRun = override(params.dryRun, false, this.dryRun)!!
         result.query = override(params.query, mutableListOf(), this.query)!!
+        result.showTree = override(params.showTree, false, this.showTree)!!
         result.paramFile = null
         return result
     }

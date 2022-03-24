@@ -90,7 +90,6 @@ internal class DataUpdaterTest : BaseDatabaseTest() {
             setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()))
             addBatch()
 
-
             executeBatch()
         }
     }
