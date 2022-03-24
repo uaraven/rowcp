@@ -135,7 +135,7 @@ internal class DataInserterTest : BaseDatabaseTest() {
                     graph.table("child")!!, listOf(
                         ColumnData("first", Types.VARCHAR, "1"),
                         ColumnData("second", Types.VARCHAR, "1"),
-                        ColumnData("value", Types.INTEGER, 1),
+                        ColumnData("val", Types.INTEGER, 1),
                     )
                 )
             ), listOf(), listOf()
@@ -183,7 +183,7 @@ internal class DataInserterTest : BaseDatabaseTest() {
                     graph.table("child")!!, listOf(
                         ColumnData("first", Types.VARCHAR, "1"),
                         ColumnData("second", Types.VARCHAR, "1"),
-                        ColumnData("value", Types.INTEGER, 1),
+                        ColumnData("val", Types.INTEGER, 1),
                         ColumnData("updated_on", Types.TIMESTAMP, "2020-01-01T10:11:12")
                     )
                 ),
@@ -191,7 +191,7 @@ internal class DataInserterTest : BaseDatabaseTest() {
                     graph.table("child")!!, listOf(
                         ColumnData("first", Types.VARCHAR, "2"),
                         ColumnData("second", Types.VARCHAR, "2"),
-                        ColumnData("value", Types.INTEGER, 2),
+                        ColumnData("val", Types.INTEGER, 2),
                         ColumnData("updated_on", Types.TIMESTAMP, "2020-01-01T10:11:13")
                     )
                 )

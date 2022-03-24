@@ -7,7 +7,7 @@ import net.ninjacat.rowcp.log
 import java.sql.DatabaseMetaData.bestRowTemporary
 import java.sql.DriverManager
 
-class DbSchema(jdbcUrl: String, user: String?, password: String?) {
+class DbSchema(val jdbcUrl: String, user: String?, password: String?) {
 
     val connection = DriverManager.getConnection(jdbcUrl, user, password)!!
 

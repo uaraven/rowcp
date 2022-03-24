@@ -68,12 +68,12 @@ internal class DataUpdaterTest : BaseDatabaseTest() {
         val main = readValues(schema.connection, "SELECT text FROM main")
         assertThat(main).containsExactlyInAnyOrder("1")
 
-        val children = readValues(schema.connection, "SELECT value FROM child")
+        val children = readValues(schema.connection, "SELECT val FROM child")
         assertThat(children).containsExactlyInAnyOrder(1, 2, 15)
     }
 
     private fun insertExistingData(connection: Connection) {
-        connection.prepareStatement("INSERT INTO child(first, second, value, updated_on) VALUES (?, ?, ?, ?)").use {
+        connection.prepareStatement("INSERT INTO child(first, second, val, updated_on) VALUES (?, ?, ?, ?)").use {
             setString(1, "1")
             setString(2, "1")
             setInt(3, 11)
@@ -124,7 +124,7 @@ internal class DataUpdaterTest : BaseDatabaseTest() {
                     graph.table("child")!!, listOf(
                         ColumnData("first", Types.VARCHAR, "1"),
                         ColumnData("second", Types.VARCHAR, "1"),
-                        ColumnData("value", Types.INTEGER, 1),
+                        ColumnData("val", Types.INTEGER, 1),
                         ColumnData("updated_on", Types.TIMESTAMP, "2020-01-01T10:11:12")
                     )
                 ),
@@ -132,7 +132,7 @@ internal class DataUpdaterTest : BaseDatabaseTest() {
                     graph.table("child")!!, listOf(
                         ColumnData("first", Types.VARCHAR, "2"),
                         ColumnData("second", Types.VARCHAR, "2"),
-                        ColumnData("value", Types.INTEGER, 2),
+                        ColumnData("val", Types.INTEGER, 2),
                         ColumnData("updated_on", Types.TIMESTAMP, "2020-01-01T10:11:13")
                     )
                 )

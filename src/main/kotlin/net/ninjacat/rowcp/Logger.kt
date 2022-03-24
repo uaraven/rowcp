@@ -9,6 +9,10 @@ val V_NORMAL = 1
 val V_VERBOSE = 2
 val V_SQL = 3
 
+fun logError(message: String) {
+    System.err.println(ansi().fgRed().a(message).reset())
+}
+
 fun logError(e: Exception, message: String?) {
     if (message != null) {
         System.err.println(ansi().fgRed().a(message).reset())

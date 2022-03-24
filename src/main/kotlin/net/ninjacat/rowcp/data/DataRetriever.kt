@@ -7,6 +7,7 @@ import java.sql.Connection
 import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLSyntaxErrorException
+import kotlin.system.exitProcess
 
 data class SelectRelationship(
     val sourceTableName: String,
@@ -56,6 +57,10 @@ class DataRetriever(val params: Args, private val schema: DbSchema) {
         sourceConnection = schema.connection
 
         log(V_VERBOSE, "Starting data retrieval from @|yellow ${query.table}|@")
+        if (!schemaGraph.tables.containsKey(query.table)) {
+            logError("Table ${query.table} not found in source schema")
+            exitProcess(-1)
+        }
         val startingNode = schemaGraph.tables[query.table]!!
         val select = SelectQuery(
             "SELECT ${if (query.selectDistinct) "DISTINCT" else ""} * FROM ${query.table}",

@@ -20,6 +20,13 @@ object Utils {
         Class.forName(driver)
     }
 
+    fun getJdbcDriver(jdbcUrl: String): String {
+        if (!jdbcUrl.startsWith("jdbc:")) {
+            throw RuntimeException("Invalid JDBC connection string: @|yellow $jdbcUrl")
+        }
+        return URI.create(jdbcUrl.substring(5)).scheme
+    }
+
     fun <T : AutoCloseable, R> T.use(block: T.() -> R): R {
         try {
             return block(this)

@@ -1,6 +1,7 @@
 package net.ninjacat.rowcp.data
 
 import net.ninjacat.rowcp.*
+import net.ninjacat.rowcp.data.sql.SqlSupport
 
 data class InsertBatch(val statement: String, val data: List<DataRow>)
 
@@ -9,6 +10,8 @@ class DataInserter(private val args: Args, schema: DbSchema) : DataWriter {
     private val conn = schema.connection
     private val schemaGraph = schema.getSchemaGraph()
     private val writtenRows = mutableSetOf<DataRow>()
+
+    private val driver = SqlSupport.getSqlSupport(schema.jdbcUrl)
 
     fun prepareBatches(startingNode: DataNode): List<InsertBatch> {
         val beforeBatches = startingNode.before.flatMap { prepareBatches(it) }
@@ -19,8 +22,13 @@ class DataInserter(private val args: Args, schema: DbSchema) : DataWriter {
             throw RuntimeException("No table '${startingNode.tableName}' in the target database")
         }
         val (name, columns, _, _) = schemaGraph.tables[startingNode.tableName]!!
-        val baseInsert = "INSERT INTO $name(${columns.joinToString(",") { it.name }})\n" +
-                "VALUES(${columns.joinToString(",") { "?" }})"
+        val baseInsert =
+            if (args.ignoreExisting) {
+                driver.insertIgnoringQuery(name, columns)
+            } else {
+                "INSERT INTO $name(${columns.joinToString(",") { it.name }})\n" +
+                        "VALUES(${columns.joinToString(",") { "?" }})"
+            }
 
         val batches = startingNode.rows.chunked(args.chunkSize).map { InsertBatch(baseInsert, it) }
 

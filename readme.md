@@ -71,7 +71,13 @@ missing columns will be treated as errors.
 `--update` - allows updating target database if the row with the same primary key already exists. This is considerably
 slower than default insert mode and so is not recommended.
 
-`--chunk-size` - When reading from the source database this will limit the number of conditions in generated queries. This helps to avoid generating queries that are too large to be handled by the source server. When writing to the target database, this will set the size of the `INSERT` batches.
+`--ignore-existing` - Ignore insert statement if the row already exists. This allows to skip rows that already exist in
+target database. This option is faster than `--update` but may not be supported by all databases. It
+uses `ON CONFLICT DO NOTHING` with Postgres and `INSERT IGNORE` with Mysql
+
+`--chunk-size` - When reading from the source database this will limit the number of conditions in generated queries.
+This helps to avoid generating queries that are too large to be handled by the source server. When writing to the target
+database, this will set the size of the `INSERT` batches.
 
 `--source-user` and `--target-user` - username for connecting to the source and target database respectively.  
 You may also pass username as part of the connection string.

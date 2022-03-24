@@ -22,31 +22,31 @@
     <insert tableName="child">
       <column name="first" value="first 1"/>
       <column name="second" value="second 1"/>
-      <column name="value" value="1"/>
+      <column name="val" value="1"/>
       <column name="updated_on" value="NOW()"/>
     </insert>
     <insert tableName="child">
       <column name="first" value="first 2"/>
       <column name="second" value="second 2"/>
-      <column name="value" value="2"/>
+      <column name="val" value="2"/>
       <column name="updated_on" value="NOW()"/>
     </insert>
     <insert tableName="child">
       <column name="first" value="first 3"/>
       <column name="second" value="second 3"/>
-      <column name="value" value="3"/>
+      <column name="val" value="3"/>
       <column name="updated_on" value="NOW()"/>
     </insert>
     <insert tableName="child">
       <column name="first" value="first 4"/>
       <column name="second" value="second 4"/>
-      <column name="value" value="4"/>
+      <column name="val" value="4"/>
       <column name="updated_on" value="NOW()"/>
     </insert>
     <insert tableName="child">
       <column name="first" value="first 5"/>
       <column name="second" value="second 5"/>
-      <column name="value" value="5"/>
+      <column name="val" value="5"/>
       <column name="updated_on" value="NOW()"/>
     </insert>
   </changeSet>
@@ -109,13 +109,13 @@
   <changeSet id="src-5" author="me">
     <insert tableName="sub_main">
       <column name="main_id" value="1"/>
-      <column name="key" value="k1"/>
-      <column name="value" value="1"/>
+      <column name="_key" value="k1"/>
+      <column name="val" value="1"/>
     </insert>
     <insert tableName="sub_main">
       <column name="main_id" value="2"/>
-      <column name="key" value="k2"/>
-      <column name="value" value="10"/>
+      <column name="_key" value="k2"/>
+      <column name="val" value="10"/>
     </insert>
   </changeSet>
 
