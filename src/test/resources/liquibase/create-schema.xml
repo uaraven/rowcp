@@ -19,16 +19,16 @@
       <column name="second" type="varchar(30)">
         <constraints primaryKey="true"/>
       </column>
-      <column name="value" type="int"/>
+      <column name="val" type="int"/>
       <column name="updated_on" type="timestamp"/>
     </createTable>
 
     <createTable tableName="sub_main">
       <column name="main_id" type="int"/>
-      <column name="key" type="varchar(20)">
+      <column name="_key" type="varchar(20)">
         <constraints primaryKey="true"/>
       </column>
-      <column name="value" type="int"/>
+      <column name="val" type="int"/>
     </createTable>
 
     <addForeignKeyConstraint
@@ -51,7 +51,7 @@
                              baseColumnNames="sub_main_key"
                              constraintName="sub_main_rel_sub_main_fk"
                              referencedTableName="sub_main"
-                             referencedColumnNames="key"/>
+                             referencedColumnNames="_key"/>
 
     <createTable tableName="intermediate">
       <column name="id" type="int" autoIncrement="true">

@@ -60,7 +60,7 @@ class Args {
 
     @Parameter(
         names = ["--update"],
-        description = "Allow updating rows where primary key already exist in the target databsae"
+        description = "Allow updating rows where primary key already exist in the target database"
     )
     var allowUpdate = false
 
@@ -69,6 +69,12 @@ class Args {
         description = "Print list of tables that will be considered for copying"
     )
     var showTree = false
+
+    @Parameter(
+        names = ["--ignore-existing"],
+        description = "Ignore existing rows during insert whenever possible. This option might not be supported with some JDBC drivers and is ignored when '--update' parameter is used"
+    )
+    var ignoreExisting = false
 
     @Parameter(description = "Query")
     var query: MutableList<String> = mutableListOf()
@@ -115,6 +121,7 @@ class Args {
         result.dryRun = override(params.dryRun, false, this.dryRun)!!
         result.query = override(params.query, mutableListOf(), this.query)!!
         result.showTree = override(params.showTree, false, this.showTree)!!
+        result.ignoreExisting = override(params.ignoreExisting, false, this.ignoreExisting)!!
         result.paramFile = null
         return result
     }
