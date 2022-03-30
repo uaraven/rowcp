@@ -12,7 +12,8 @@ object Utils {
             throw RuntimeException("Invalid JDBC connection string: @|yellow $jdbcUrl")
         }
         val driver = when (val scheme = URI.create(jdbcUrl.substring(5)).scheme) {
-            "mysql", "mariadb" -> "org.mariadb.jdbc.Driver"
+            "mariadb" -> "org.mariadb.jdbc.Driver"
+            "mysql" -> "com.mysql.cj.jdbc.Driver"
             "postgresql" -> "org.postgresql.Driver"
             "h2" -> "org.h2.Driver"
             else -> throw RuntimeException("JDBC scheme $scheme is not supported")

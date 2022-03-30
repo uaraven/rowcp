@@ -15,14 +15,21 @@ class DbSchema(val jdbcUrl: String, user: String?, password: String?) {
 
     fun getSchemaGraph(): SchemaGraph = schema.value
 
+    private fun Double.format(digits: Int) = "%.${digits}f".format(this)
+
     private fun buildSchemaGraph(): SchemaGraph {
         log(V_NORMAL, "Building source schema graph")
         val resultSet = connection.metaData.getTables(
             null, null, null, arrayOf("TABLE")
         )
-        val tables: MutableMap<String, Table> = mutableMapOf()
+        val tableNames = mutableListOf<String>()
         while (resultSet.next()) {
-            val tableName = resultSet.getString("TABLE_NAME")
+            tableNames.add(resultSet.getString("TABLE_NAME"))
+        }
+        val tables: MutableMap<String, Table> = mutableMapOf()
+        tableNames.forEachIndexed { index, tableName ->
+            val percentComplete = index * 100.0 / tableNames.size
+            log(V_VERBOSE, "\r${percentComplete.format(1)}%    ", noLineFeed = true)
             val parents = getParents(tableName)
             val children = getChildren(tableName)
             val columns = getTableColumns(tableName)
@@ -30,6 +37,7 @@ class DbSchema(val jdbcUrl: String, user: String?, password: String?) {
             val table = Table(tableName.lowercase(), columns, parents, children, pk)
             tables[table.name] = table
         }
+        log(V_VERBOSE, "              ")
         log(V_VERBOSE, "Collected metadata of @|yellow ${tables.size}|@ tables")
 
         buildReverseParents(tables)

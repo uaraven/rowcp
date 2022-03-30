@@ -17,8 +17,8 @@ fun logError(e: Exception, message: String?) {
     if (message != null) {
         System.err.println(ansi().fgRed().a(message).reset())
     } else {
-        e.printStackTrace()
     }
+    e.printStackTrace()
 }
 
 fun log(level: Int, message: String?, noLineFeed: Boolean = false) {
