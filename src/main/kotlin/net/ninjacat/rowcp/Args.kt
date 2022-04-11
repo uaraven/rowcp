@@ -66,7 +66,7 @@ class Args {
 
     @Parameter(
         names = ["--show-copy-tree"],
-        description = "Print list of tables that will be considered for copying"
+        description = "Print list of tables that will be considered for copying and terminate. No actual copying is performed"
     )
     var showTree = false
 
@@ -76,14 +76,14 @@ class Args {
     )
     var ignoreExisting = false
 
-    @Parameter(description = "Query")
-    var query: MutableList<String> = mutableListOf()
-
     @Parameter(
         names = ["--dump-configuration"],
-        description = "Dump parameter values and terminate. Passwords are not revealed"
+        description = "Dump parameter values and terminate. No actual copying is performed. Passwords are not revealed"
     )
     var dumpConfiguration = false
+
+    @Parameter(description = "Query")
+    var query: MutableList<String> = mutableListOf()
 
     val tablesToSkip: Set<String> by lazy { skipSourceTables?.split(",")?.map { it.lowercase() }?.toSet() ?: setOf() }
 
@@ -183,6 +183,9 @@ class Args {
             val args = Args()
             val commander = JCommander.newBuilder()
                 .addObject(args)
+                .allowParameterOverwriting(true)
+                .allowAbbreviatedOptions(true)
+                .acceptUnknownOptions(false)
                 .programName("rowcp")
                 .build()
             commander.parse(*argv)

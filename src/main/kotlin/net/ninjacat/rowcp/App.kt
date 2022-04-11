@@ -36,7 +36,8 @@ fun main(vararg argv: String) {
             log(V_NORMAL, "Performing a @|blue dry run|@")
         }
 
-        val sourceDbSchema = DbSchema(args.sourceJdbcUrl, args.nullableSourceUser(), args.nullableSourcePassword())
+        val sourceDbSchema =
+            DbSchema("source", args.sourceJdbcUrl, args.nullableSourceUser(), args.nullableSourcePassword())
         if (args.showTree) {
             val visualizer = CopyVisualizer(args, parser, sourceDbSchema)
             visualizer.showCopyTree()
@@ -67,7 +68,8 @@ fun main(vararg argv: String) {
 
 private fun getTargetJdbcProcessors(args: Args): Pair<Mapper, DataWriter> {
     log(V_NORMAL, "Copying @|blue JDBC|@ target")
-    val targetDbSchema = DbSchema(args.targetJdbcUrl, args.nullableTargetUser(), args.nullableTargetPassword())
+    val targetDbSchema =
+        DbSchema("target", args.targetJdbcUrl, args.nullableTargetUser(), args.nullableTargetPassword())
     val mapper = DataMapper(args, targetDbSchema)
     val writer: DataWriter = if (args.allowUpdate) {
         DataUpdater(args, targetDbSchema)

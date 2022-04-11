@@ -20,7 +20,7 @@ internal class DataMapperTest : BaseDatabaseTest() {
     override fun setUp() {
         super.setUp()
         this.args = createArgs(sourceUrl, targetUrl)
-        this.schema = DbSchema(targetUrl, null, null)
+        this.schema = DbSchema("test", targetUrl, null, null)
         this.graph = schema.getSchemaGraph()
     }
 

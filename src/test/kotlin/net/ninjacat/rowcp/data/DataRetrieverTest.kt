@@ -16,7 +16,7 @@ internal class DataRetrieverTest : BaseDatabaseTest() {
     override fun setUp() {
         super.setUp()
         this.args = createArgs(sourceUrl, targetUrl)
-        this.schema = DbSchema(sourceUrl, null, null)
+        this.schema = DbSchema("test", sourceUrl, null, null)
     }
 
     @Test

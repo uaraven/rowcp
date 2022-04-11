@@ -10,7 +10,7 @@ internal class DbSchemaTest : BaseDatabaseTest() {
     internal fun testSchemaGraphContainsTables() {
         val args = createArgs(sourceUrl, targetUrl)
 
-        val schema = DbSchema(args.sourceJdbcUrl, args.nullableSourceUser(), args.nullableSourcePassword())
+        val schema = DbSchema("test", args.sourceJdbcUrl, args.nullableSourceUser(), args.nullableSourcePassword())
 
         val graph = schema.getSchemaGraph()
 
@@ -24,7 +24,7 @@ internal class DbSchemaTest : BaseDatabaseTest() {
     internal fun testOutboundForeignKeys() {
         val args = createArgs(sourceUrl, targetUrl)
 
-        val schema = DbSchema(args.sourceJdbcUrl, args.nullableSourceUser(), args.nullableSourcePassword())
+        val schema = DbSchema("test", args.sourceJdbcUrl, args.nullableSourceUser(), args.nullableSourcePassword())
 
         val graph = schema.getSchemaGraph()
         val child = graph.table("CHILD")!!
@@ -41,7 +41,7 @@ internal class DbSchemaTest : BaseDatabaseTest() {
     internal fun testInboundForeignKeys() {
         val args = createArgs(sourceUrl, targetUrl)
 
-        val schema = DbSchema(args.sourceJdbcUrl, args.nullableSourceUser(), args.nullableSourcePassword())
+        val schema = DbSchema("test", args.sourceJdbcUrl, args.nullableSourceUser(), args.nullableSourcePassword())
 
         val graph = schema.getSchemaGraph()
         val table = graph.table("intermediate_to_child")!!

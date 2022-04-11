@@ -6,8 +6,12 @@ import net.ninjacat.rowcp.data.Utils.use
 import net.ninjacat.rowcp.log
 import java.sql.DatabaseMetaData.bestRowTemporary
 import java.sql.DriverManager
+import java.time.Duration
+import java.time.Instant
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicInteger
 
-class DbSchema(val jdbcUrl: String, user: String?, password: String?) {
+class DbSchema(val name: String, val jdbcUrl: String, user: String?, password: String?) {
 
     val connection = DriverManager.getConnection(jdbcUrl, user, password)!!
 
@@ -18,27 +22,32 @@ class DbSchema(val jdbcUrl: String, user: String?, password: String?) {
     private fun Double.format(digits: Int) = "%.${digits}f".format(this)
 
     private fun buildSchemaGraph(): SchemaGraph {
-        log(V_NORMAL, "Building source schema graph")
+        log(V_NORMAL, "Building $name schema graph")
+        val start = Instant.now()
         val resultSet = connection.metaData.getTables(
             null, null, null, arrayOf("TABLE")
         )
-        val tableNames = mutableListOf<String>()
+        val tableNames = mutableSetOf<String>()
         while (resultSet.next()) {
             tableNames.add(resultSet.getString("TABLE_NAME"))
         }
-        val tables: MutableMap<String, Table> = mutableMapOf()
-        tableNames.forEachIndexed { index, tableName ->
-            val percentComplete = index * 100.0 / tableNames.size
-            log(V_VERBOSE, "\r${percentComplete.format(1)}%    ", noLineFeed = true)
-            val parents = getParents(tableName)
-            val children = getChildren(tableName)
-            val columns = getTableColumns(tableName)
-            val pk = getPrimaryKey(tableName)
-            val table = Table(tableName.lowercase(), columns, parents, children, pk)
-            tables[table.name] = table
+        log(V_NORMAL, "Tables to scan: ${tableNames.size}")
+        val counter = AtomicInteger(0)
+        val tables = ConcurrentHashMap<String, Table>()
+        tableNames.parallelStream().forEach { tableName ->
+            tables.computeIfAbsent(tableName.lowercase()) { tableN ->
+                val parents = getParents(tableName)
+                val children = getChildren(tableName)
+                val columns = getTableColumns(tableName)
+                val pk = getPrimaryKey(tableName)
+                val table = Table(tableN, columns, parents, children, pk)
+                val percentComplete = counter.incrementAndGet() * 100.0 / tableNames.size
+                log(V_VERBOSE, "\r${percentComplete.format(1)}%    ", noLineFeed = true)
+                table
+            }
         }
-        log(V_VERBOSE, "              ")
-        log(V_VERBOSE, "Collected metadata of @|yellow ${tables.size}|@ tables")
+        val done = Duration.between(start, Instant.now())
+        log(V_VERBOSE, "\rCollected metadata in @|cyan ${done.toMinutes()}:${"%02d".format(done.toSecondsPart())} |@")
 
         buildReverseParents(tables)
 
