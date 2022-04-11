@@ -79,7 +79,36 @@ class Args {
     @Parameter(description = "Query")
     var query: MutableList<String> = mutableListOf()
 
+    @Parameter(
+        names = ["--dump-configuration"],
+        description = "Dump parameter values and terminate. Passwords are not revealed"
+    )
+    var dumpConfiguration = false
+
     val tablesToSkip: Set<String> by lazy { skipSourceTables?.split(",")?.map { it.lowercase() }?.toSet() ?: setOf() }
+
+    fun dump() {
+        log(V_NORMAL, "@|yellow --source-connection =|@ @|cyan ${sourceJdbcUrl}|@")
+        log(V_NORMAL, "@|yellow --source-user =|@ @|cyan ${sourceUser}|@")
+        if (!sourcePassword.isNullOrEmpty()) {
+            log(V_NORMAL, "@|yellow --source-password =|@ @|cyan *******|@")
+        }
+        log(V_NORMAL, "@|yellow --target-connection =|@ @|cyan ${targetJdbcUrl}|@")
+        log(V_NORMAL, "@|yellow --target-user =|@ @|cyan ${targetUser}|@")
+        if (!targetPassword.isNullOrEmpty()) {
+            log(V_NORMAL, "@|yellow --target-password =|@ @|cyan *******|@")
+        }
+        log(V_NORMAL, "@|yellow --verbose =|@ @|cyan ${verbosity}|@")
+        log(V_NORMAL, "@|yellow --skip-tables =|@ @|cyan ${skipSourceTables}|@")
+        log(V_NORMAL, "@|yellow --skip-unknown-columns =|@ @|cyan ${skipMissingColumns}|@")
+        log(V_NORMAL, "@|yellow --chunk-size =|@ @|cyan ${chunkSize}|@")
+        log(V_NORMAL, "@|yellow --dry-run =|@ @|cyan ${dryRun}|@")
+        log(V_NORMAL, "@|yellow --show-copy-tree =|@ @|cyan ${showTree}|@")
+        log(V_NORMAL, "@|yellow --ignore-existing =|@ @|cyan ${ignoreExisting}|@")
+        log(V_NORMAL, "@|yellow --dump-configuration =|@ @|cyan ${dumpConfiguration}|@")
+        log(V_NORMAL, "@|yellow --param-file =|@ @|cyan ${if (paramFile == null) "None" else paramFile}|@")
+        log(V_NORMAL, "@|yellow query|@:\n@|cyan ${query.joinToString("\n")}|@")
+    }
 
     private fun validate(): Args {
         if (showHelp) {
@@ -122,6 +151,7 @@ class Args {
         result.query = override(params.query, mutableListOf(), this.query)!!
         result.showTree = override(params.showTree, false, this.showTree)!!
         result.ignoreExisting = override(params.ignoreExisting, false, this.ignoreExisting)!!
+        result.dumpConfiguration = override(params.dumpConfiguration, false, this.dumpConfiguration)!!
         result.paramFile = null
         return result
     }

@@ -23,6 +23,11 @@ fun main(vararg argv: String) {
 
         currentLogLevel = args.verbosity
 
+        if (args.dumpConfiguration) {
+            args.dump()
+            return
+        }
+
         val parser = QueryParser()
 
         Utils.initializeDatabase(args.sourceJdbcUrl)
@@ -55,9 +60,9 @@ fun main(vararg argv: String) {
         // do nothing, help has been shown already
     } catch (e: Exception) {
         logError(e, e.message)
+    } finally {
+        AnsiConsole.systemUninstall()
     }
-
-    AnsiConsole.systemUninstall()
 }
 
 private fun getTargetJdbcProcessors(args: Args): Pair<Mapper, DataWriter> {

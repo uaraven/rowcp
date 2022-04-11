@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.kotlin.jvm' version '1.6.10'
+    id 'org.jetbrains.kotlin.jvm' version '1.6.20'
     id 'com.github.johnrengelman.shadow' version '7.0.0'
     id 'application'
     id 'antlr'
@@ -9,7 +9,7 @@ plugins {
 mainClassName = 'net.ninjacat.rowcp.AppKt'
 
 group 'net.ninjacat.rowcp'
-version '0.4.3'
+version '0.4.4'
 
 repositories {
     mavenCentral()
@@ -26,7 +26,7 @@ ext {
 }
 
 dependencies {
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.6.10'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.6.20'
 
     antlr "org.antlr:antlr4:$antlrVersion"
     implementation "org.antlr:antlr4-runtime:$antlrVersion"
