@@ -45,7 +45,7 @@ data class DataNode(
     fun size(): Int = rows.size + before.map { it.size() }.sum() + after.map { it.size() }.sum()
 }
 
-class DataRetriever(val params: Args, private val schema: DbSchema) {
+class DataRetriever(params: Args, private val schema: DbSchema) {
 
     lateinit var sourceConnection: Connection
     lateinit var processedRelationships: MutableSet<Relationship>
@@ -64,7 +64,7 @@ class DataRetriever(val params: Args, private val schema: DbSchema) {
         }
         val startingNode = schemaGraph.tables[query.table]!!
         val select = SelectQuery(
-            "SELECT ${if (query.selectDistinct) "DISTINCT" else ""} * FROM ${query.table}",
+            "SELECT ${if (query.selectDistinct) "DISTINCT" else ""} * FROM ${query.tableName()}",
             (if (query.filter != "") listOf("\nWHERE\n${query.filter}") else listOf()), listOf()
         )
 

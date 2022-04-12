@@ -26,7 +26,7 @@ class QueryParser : ANTLRErrorListener {
         ParseTreeWalker.DEFAULT.walk(listener, parser.query())
 
         if (errors.isEmpty()) {
-            return Query(listener.tableName, listener.filter, listener.distinct)
+            return Query(listener.tableName, listener.tableAlias, listener.filter, listener.distinct)
         } else {
             val sb = StringBuilder()
             with(sb) {

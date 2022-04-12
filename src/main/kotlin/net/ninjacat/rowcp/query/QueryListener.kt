@@ -7,6 +7,8 @@ class QueryListener(private val src: String) : RsqlBaseListener() {
 
     var tableName = ""
 
+    var tableAlias: String? = ""
+
     var filter = ""
 
     var distinct = false
@@ -21,6 +23,7 @@ class QueryListener(private val src: String) : RsqlBaseListener() {
     override fun exitSourceName(ctx: RsqlParser.SourceNameContext?) {
         super.exitSourceName(ctx)
         tableName = ctx?.name()?.text!!
+        tableAlias = ctx.alias().text
     }
 
     override fun exitProjection(ctx: RsqlParser.ProjectionContext?) {
