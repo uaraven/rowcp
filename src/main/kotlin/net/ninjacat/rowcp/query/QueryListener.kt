@@ -23,7 +23,7 @@ class QueryListener(private val src: String) : RsqlBaseListener() {
     override fun exitSourceName(ctx: RsqlParser.SourceNameContext?) {
         super.exitSourceName(ctx)
         tableName = ctx?.name()?.text!!
-        tableAlias = ctx.alias().text
+        tableAlias = ctx.alias()?.text
     }
 
     override fun exitProjection(ctx: RsqlParser.ProjectionContext?) {
