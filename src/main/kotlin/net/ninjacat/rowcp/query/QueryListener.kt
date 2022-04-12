@@ -15,7 +15,7 @@ class QueryListener(private val src: String) : RsqlBaseListener() {
 
     override fun exitWhere(ctx: RsqlParser.WhereContext?) {
         super.exitWhere(ctx)
-        val start = ctx!!.anything().getStart().startIndex
+        val start = ctx!!.anything().start.startIndex
         val end = ctx.anything().stop.stopIndex
         filter = src.substring(start, end + 1)
     }
