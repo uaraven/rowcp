@@ -52,6 +52,7 @@ class DataRetriever(val params: Args, private val schema: DbSchema) {
     lateinit var preparedRows: MutableSet<DataRow>
     private val schemaGraph: SchemaGraph = schema.getSchemaGraph()
     private val chunkSize = params.chunkSize
+    private val tableFilter = TableFilter(params.tablesToSkip)
 
     fun collectDataToCopy(query: Query): DataNode {
         sourceConnection = schema.connection
@@ -84,7 +85,7 @@ class DataRetriever(val params: Args, private val schema: DbSchema) {
                     return@flatMap if (!processedRelationships.contains(it)) { // skip this relationship if we've seen it
                         log(V_VERBOSE, "Processing relationship @|cyan ${node.name}|@ <- @|blue ${parentNode.name}|@")
                         processedRelationships.add(it)
-                        if (params.tablesToSkip.contains(it.sourceTable)) {
+                        if (tableFilter.shouldSkip(it.sourceTable)) {
                             log(V_NORMAL, "Skipping table @|yellow ${it.sourceTable}|@")
                             listOf()
                         } else {
@@ -103,13 +104,13 @@ class DataRetriever(val params: Args, private val schema: DbSchema) {
                     return@flatMap if (!processedRelationships.contains(it)) { // skip this relationship if we've seen it
                         log(V_VERBOSE, "Processing relationship @|blue ${node.name}|@ -> @|cyan ${childNode.name}|@")
                         processedRelationships.add(it)
-                        if (params.tablesToSkip.contains(it.targetTable)) {
+                        if (tableFilter.shouldSkip(it.targetTable)) {
                             log(V_NORMAL, "Skipping table @|yellow ${it.targetTable}|@")
                             listOf()
                         } else {
                             val query = buildChildQuery(it, rows)
-                        listOf(walk(childNode, query, walkDirection))
-                    }
+                            listOf(walk(childNode, query, walkDirection))
+                        }
                 } else {
                     listOf()
                 }
@@ -120,7 +121,7 @@ class DataRetriever(val params: Args, private val schema: DbSchema) {
 
     private fun buildParentQuery(relationship: Relationship, rows: List<DataRow>): SelectQuery {
         val baseQuery =
-            with(StringBuilder("SELECT DISTINCT parent.* FROM ${relationship.sourceTable} parent JOIN ${relationship.targetTable} child ON\n")) {
+            with(StringBuilder("SELECT parent.* FROM ${relationship.sourceTable} parent JOIN ${relationship.targetTable} child ON\n")) {
                 append(
                     relationship.columnMap.joinToString(" AND ", "(", ")") {
                         "parent.${it.sourceColumn} = child.${it.targetColumn}"
@@ -138,7 +139,7 @@ class DataRetriever(val params: Args, private val schema: DbSchema) {
 
     private fun buildChildQuery(relationship: Relationship, rows: List<DataRow>): SelectQuery {
         val baseQuery =
-            with(StringBuilder("SELECT DISTINCT child.* FROM ${relationship.targetTable} child JOIN ${relationship.sourceTable} parent ON\n")) {
+            with(StringBuilder("SELECT child.* FROM ${relationship.targetTable} child JOIN ${relationship.sourceTable} parent ON\n")) {
                 append(
                     relationship.columnMap.joinToString(" AND ", "(", ")") {
                         "parent.${it.sourceColumn} = child.${it.targetColumn}"
@@ -164,7 +165,7 @@ class DataRetriever(val params: Args, private val schema: DbSchema) {
     }
 
     private fun retrieveRows(table: Table, queries: SelectQuery): List<DataRow> {
-        log(V_SQL, "Executing query:\n${queries.select}")
+        log(V_SQL, "Executing query:\n${queries.select}\n${queries.filters}")
         return queries.queryList().flatMap {
             val statement = sourceConnection.prepareStatement(it.first)
             try {
@@ -177,7 +178,7 @@ class DataRetriever(val params: Args, private val schema: DbSchema) {
             } finally {
                 statement.close()
             }
-        }
+        }.toSet().toList() // clean duplicates
     }
 
     private fun applyParametersAndQuery(statement: PreparedStatement, second: List<ColumnData>): ResultSet {

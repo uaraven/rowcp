@@ -1,5 +1,6 @@
 package net.ninjacat.rowcp.data
 
+import kotlinx.serialization.Serializable
 import java.sql.PreparedStatement
 import java.sql.Types
 import java.time.LocalDate
@@ -7,8 +8,10 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
-data class Column(val name: String, val type: Int)
+@Serializable
+data class Column(val name: String, val type: Int, val nullable: Boolean = false)
 
+@Serializable
 data class ColumnMap(val sourceColumn: String, val targetColumn: String) {
     companion object {
         fun from(thisColumn: String, targetColumn: String): ColumnMap {
@@ -17,8 +20,10 @@ data class ColumnMap(val sourceColumn: String, val targetColumn: String) {
     }
 }
 
+@Serializable
 data class Relationship(val sourceTable: String, val targetTable: String, val columnMap: List<ColumnMap>)
 
+@Serializable
 data class SchemaGraph(
     val tables: Map<String, Table>
 ) {
@@ -26,6 +31,7 @@ data class SchemaGraph(
     fun table(name: String): Table? = tables[name.lowercase()]
 }
 
+@Serializable
 data class Table(
     val name: String,
     val columns: List<Column>,
@@ -36,6 +42,8 @@ data class Table(
     fun findParent(parentTableName: String): Relationship? = inbound.find { it.sourceTable == parentTableName }
 
     val columnNames = columns.map { it.name }.toSet()
+
+    fun columnForName(columnName: String): Column? = columns.find { it.name == columnName }
 }
 
 data class ColumnData(val columnName: String, val type: Int, val value: Any?) {

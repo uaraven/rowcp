@@ -82,10 +82,23 @@ class Args {
     )
     var dumpConfiguration = false
 
+    @Parameter(
+        names = ["--schema-cache"],
+        description = "Schema cache control. Pass one of following parameters: use, clear. Cache will be created if it doesn't exist"
+    )
+    var schemaCache: String? = null
+
     @Parameter(description = "Query")
     var query: MutableList<String> = mutableListOf()
 
+
     val tablesToSkip: Set<String> by lazy { skipSourceTables?.split(",")?.map { it.lowercase() }?.toSet() ?: setOf() }
+
+    val schemaCacheControl: SchemaCacheControl? by lazy {
+        if (schemaCache == null) null else SchemaCacheControl.parse(
+            schemaCache!!
+        )
+    }
 
     fun dump() {
         log(V_NORMAL, "@|yellow --source-connection =|@ @|cyan ${sourceJdbcUrl}|@")
@@ -106,6 +119,7 @@ class Args {
         log(V_NORMAL, "@|yellow --show-copy-tree =|@ @|cyan ${showTree}|@")
         log(V_NORMAL, "@|yellow --ignore-existing =|@ @|cyan ${ignoreExisting}|@")
         log(V_NORMAL, "@|yellow --dump-configuration =|@ @|cyan ${dumpConfiguration}|@")
+        log(V_NORMAL, "@|yellow --schema-cache =|@ @|cyan ${schemaCache}|@")
         log(V_NORMAL, "@|yellow --param-file =|@ @|cyan ${if (paramFile == null) "None" else paramFile}|@")
         log(V_NORMAL, "@|yellow query|@:\n@|cyan ${query.joinToString("\n")}|@")
     }
@@ -152,6 +166,7 @@ class Args {
         result.showTree = override(params.showTree, false, this.showTree)!!
         result.ignoreExisting = override(params.ignoreExisting, false, this.ignoreExisting)!!
         result.dumpConfiguration = override(params.dumpConfiguration, false, this.dumpConfiguration)!!
+        result.schemaCache = override(params.schemaCache, null, this.schemaCache)
         result.paramFile = null
         return result
     }
@@ -223,6 +238,28 @@ class Args {
             val args = parse(*argv)
             args.paramFile = null
             return args
+        }
+    }
+}
+
+enum class SchemaCacheControl(val id: String) {
+    USE("use"),
+    CLEAR("clear");
+
+    companion object {
+        fun parse(value: String?): SchemaCacheControl? {
+            if (value == null) {
+                return null
+            }
+            return when (value.lowercase()) {
+                USE.id -> USE
+                CLEAR.id -> CLEAR
+                else -> {
+                    log(V_NORMAL, "Invalid value for @|red --schema-cache|@ parameter")
+                    log(V_NORMAL, "Allowed values are: @|cyan use |@ or @|cyan clear |@")
+                    throw ArgsParsingException()
+                }
+            }
         }
     }
 }

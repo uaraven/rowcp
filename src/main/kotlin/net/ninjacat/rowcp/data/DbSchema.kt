@@ -4,20 +4,22 @@ import net.ninjacat.rowcp.V_NORMAL
 import net.ninjacat.rowcp.V_VERBOSE
 import net.ninjacat.rowcp.data.Utils.use
 import net.ninjacat.rowcp.log
-import java.sql.DatabaseMetaData.bestRowTemporary
+import java.sql.DatabaseMetaData.bestRowSession
+import java.sql.DatabaseMetaData.columnNullable
 import java.sql.DriverManager
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
-class DbSchema(val name: String, val jdbcUrl: String, user: String?, password: String?) {
+class DbSchema(val name: String, val jdbcUrl: String, user: String?, password: String?, sg: SchemaGraph? = null) {
 
     val connection = DriverManager.getConnection(jdbcUrl, user, password)!!
 
-    private val schema = lazy { buildSchemaGraph() }
+    private var storedSchema: SchemaGraph? = sg
+    private val schema: SchemaGraph by lazy { if (storedSchema == null) buildSchemaGraph() else storedSchema!! }
 
-    fun getSchemaGraph(): SchemaGraph = schema.value
+    fun getSchemaGraph(): SchemaGraph = schema
 
     private fun Double.format(digits: Int) = "%.${digits}f".format(this)
 
@@ -86,9 +88,10 @@ class DbSchema(val name: String, val jdbcUrl: String, user: String?, password: S
     }
 
     private fun getUniqueKey(tableName: String?): Set<String> {
-        return connection.metaData.getBestRowIdentifier(null, null, tableName!!, bestRowTemporary, false).use {
+        // use whole row if primary key is not found
+        return connection.metaData.getBestRowIdentifier(null, null, tableName!!, bestRowSession, true).use {
             val results = mutableListOf<String>()
-            if (next()) {
+            while (next()) {
                 results.add(getString("COLUMN_NAME").lowercase())
             }
             results.toSet()
@@ -170,7 +173,8 @@ class DbSchema(val name: String, val jdbcUrl: String, user: String?, password: S
             while (resultSet.next()) {
                 val name = resultSet.getString("COLUMN_NAME").lowercase()
                 val type = resultSet.getInt("DATA_TYPE")
-                columns.add(Column(name, type))
+                val nullable = resultSet.getInt("NULLABLE") == columnNullable
+                columns.add(Column(name, type, nullable))
             }
             return columns.toList()
         } finally {

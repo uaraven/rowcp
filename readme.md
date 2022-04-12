@@ -63,7 +63,7 @@ mode is experimental, please review the generated SQL statements before executin
 Or, at least, some of them.
 
 `--skip-tables` - a comma-separated list of tables in the source database that are ignored. Any relationships that start
-or end at this table are also ignored.
+or end at this table are also ignored. Instead of table name one might use regular expression.
 
 `--skip-unknown-columns` - ignore columns that do not exist in the target database's tables. Without this option,
 missing columns will be treated as errors.
@@ -86,6 +86,12 @@ You may also pass username as part of the connection string.
 is not provided then the user will be prompted to type the password. Password may be omitted completely if the database
 does not require one or the password is passed as part of the connection string. For security purposes it is recommended
 not to provide password as CLI or connection string parameter.
+
+`--schema-cache` controls usage of schema graph cache. It might take a long time to retrieve metadata from the remote
+schema. Providing option `--schema-cache use` will cache the schema metadata locally and will use it during the
+following invocations with `--schema-cache use` parameter. If schema has changed, one should use `--schema-cache clear`
+to clear the cache. Schema is cached inside $USER/.rowcp directory. **WARNING** This option is considered in beta and
+it's behaviour could change, use at your own risk.
 
 ### Parameter file
 
@@ -113,6 +119,14 @@ AND name IS NOT NULL;
 ```
 
 Any options passed on command-line will override the ones specified in the parameter file.
+
+## Usage quirks
+
+If source table contains a column that is missing from the target table, then copy process will fail.
+Use `--skip-unknown-columns` option to ignore such columns.
+
+If target table has a non-null column that is missing from the source table, copy process will fail, if target column is
+nullable, then `null` value will be inserted.
 
 ## Limitations
 

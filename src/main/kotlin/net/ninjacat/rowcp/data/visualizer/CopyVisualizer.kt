@@ -20,6 +20,7 @@ import net.ninjacat.rowcp.Args
 import net.ninjacat.rowcp.V_NORMAL
 import net.ninjacat.rowcp.data.DbSchema
 import net.ninjacat.rowcp.data.Relationship
+import net.ninjacat.rowcp.data.TableFilter
 import net.ninjacat.rowcp.data.WalkDirection
 import net.ninjacat.rowcp.log
 import net.ninjacat.rowcp.query.QueryParser
@@ -32,6 +33,7 @@ class CopyVisualizer(
     private val schema: DbSchema
 ) {
     lateinit var processedRelationships: MutableSet<Relationship>
+    private val tableFilter = TableFilter(args.tablesToSkip)
 
     fun showCopyTree() {
 
@@ -52,7 +54,7 @@ class CopyVisualizer(
                     val parentNode = schemaGraph.tables[it.sourceTable]!!
                     return@flatMap if (!processedRelationships.contains(it)) { // skip this relationship if we've seen it
                         processedRelationships.add(it)
-                        if (args.tablesToSkip.contains(it.sourceTable)) {
+                        if (tableFilter.shouldSkip(it.sourceTable)) {
                             listOf()
                         } else {
                             listOf(walk(parentNode.name, WalkDirection.PARENTS))
@@ -68,7 +70,7 @@ class CopyVisualizer(
                     val childNode = schemaGraph.tables[it.targetTable]!!
                     return@flatMap if (!processedRelationships.contains(it)) { // skip this relationship if we've seen it
                         processedRelationships.add(it)
-                        if (args.tablesToSkip.contains(it.targetTable)) {
+                        if (tableFilter.shouldSkip(it.targetTable)) {
                             listOf()
                         } else {
                             listOf(walk(childNode.name, walkDirection))

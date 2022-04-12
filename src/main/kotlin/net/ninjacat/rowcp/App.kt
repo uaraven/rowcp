@@ -32,12 +32,34 @@ fun main(vararg argv: String) {
 
         Utils.initializeDatabase(args.sourceJdbcUrl)
 
+        if (args.schemaCacheControl == SchemaCacheControl.CLEAR) {
+            log(V_NORMAL, "Clearing schema caches")
+            DbSchemaCache.clearCache(args.sourceJdbcUrl)
+            DbSchemaCache.clearCache(args.targetJdbcUrl)
+            log(V_NORMAL, "Done")
+            return
+        }
+
         if (args.dryRun) {
             log(V_NORMAL, "Performing a @|blue dry run|@")
         }
 
+        val sourceSchemaGen = { sg: SchemaGraph? ->
+            DbSchema(
+                "source",
+                args.sourceJdbcUrl,
+                args.nullableSourceUser(),
+                args.nullableSourcePassword(),
+                sg
+            )
+        }
+
         val sourceDbSchema =
-            DbSchema("source", args.sourceJdbcUrl, args.nullableSourceUser(), args.nullableSourcePassword())
+            if (args.schemaCacheControl == SchemaCacheControl.USE) {
+                DbSchemaCache.useCache(args.sourceJdbcUrl, sourceSchemaGen)
+            } else {
+                sourceSchemaGen(null)
+            }
         if (args.showTree) {
             val visualizer = CopyVisualizer(args, parser, sourceDbSchema)
             visualizer.showCopyTree()
@@ -68,8 +90,21 @@ fun main(vararg argv: String) {
 
 private fun getTargetJdbcProcessors(args: Args): Pair<Mapper, DataWriter> {
     log(V_NORMAL, "Copying @|blue JDBC|@ target")
-    val targetDbSchema =
-        DbSchema("target", args.targetJdbcUrl, args.nullableTargetUser(), args.nullableTargetPassword())
+    val targetDbSchemaGen =
+        { sg: SchemaGraph? ->
+            DbSchema(
+                "target",
+                args.targetJdbcUrl,
+                args.nullableTargetUser(),
+                args.nullableTargetPassword(),
+                sg
+            )
+        }
+    val targetDbSchema = if (args.schemaCacheControl == SchemaCacheControl.USE) {
+        DbSchemaCache.useCache(args.targetJdbcUrl, targetDbSchemaGen)
+    } else {
+        targetDbSchemaGen(null)
+    }
     val mapper = DataMapper(args, targetDbSchema)
     val writer: DataWriter = if (args.allowUpdate) {
         DataUpdater(args, targetDbSchema)

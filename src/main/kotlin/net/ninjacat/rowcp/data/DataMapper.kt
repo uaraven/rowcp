@@ -20,14 +20,22 @@ class DataMapper(val args: Args, val targetSchema: DbSchema) : Mapper {
 
         val targetTable = targetSchema.getSchemaGraph().table(row.tableName())
         val mappedColumns: List<ColumnData>
+        var nullableTargetColumns: List<ColumnData>
         if (targetTable == null) {
             validationErrors.add("Table '${row.tableName()}' does not exist in the target database")
             mappedColumns = row.columns
+            nullableTargetColumns = listOf()
         } else {
             mappedColumns = row.columns.filter { targetTable.columnNames.contains(it.columnName) }
             val unmappedColumns = row.columns.filterNot { targetTable.columnNames.contains(it.columnName) }
 
-            val unfulfilledTargetColumns = targetTable.columns.filterNot { row.columnNames.contains(it.name) }
+            // collect nullable columns in target schema that don't exist in the source and populate them with nulls
+            nullableTargetColumns = targetTable.columns.filter { !row.columnNames.contains(it.name) && it.nullable }
+                .map { ColumnData(it.name, it.type, null) }
+
+            val unfulfilledTargetColumns =
+                targetTable.columns.filter { !row.columnNames.contains(it.name) && !it.nullable }
+
             if (unmappedColumns.isNotEmpty() && !args.skipMissingColumns) {
                 validationErrors.add("${if (unmappedColumns.size > 1) "Following columns do" else "Column does"} not exist in table '${row.tableName()}' in the target database: $unmappedColumns")
             }
@@ -39,6 +47,6 @@ class DataMapper(val args: Args, val targetSchema: DbSchema) : Mapper {
             throw ValidationException(validationErrors.joinToString("\n"))
         }
 
-        return DataRow(row.table, mappedColumns)
+        return DataRow(row.table, mappedColumns + nullableTargetColumns)
     }
 }
