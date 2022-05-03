@@ -14,20 +14,19 @@ class QueryParser : ANTLRErrorListener {
 
     private val errors: MutableList<ParserError> = mutableListOf()
 
-    fun parseQuery(query: String): Query {
+    fun parseQuery(query: String): List<Query> {
         val stream = CharStreams.fromString(query)
         val lexer = RsqlLexer(stream)
         val parser = RsqlParser(CommonTokenStream(lexer))
         parser.addErrorListener(this)
         errors.clear()
 
-        val listener = QueryListener(query)
+        val result = mutableListOf<Query>()
+        val q = parser.query()
 
-        ParseTreeWalker.DEFAULT.walk(listener, parser.query())
+        val selects = q.selectStatement()
 
-        if (errors.isEmpty()) {
-            return Query(listener.tableName, listener.tableAlias, listener.filter, listener.distinct)
-        } else {
+        if (errors.isNotEmpty()) {
             val sb = StringBuilder()
             with(sb) {
                 errors.forEach {
@@ -37,6 +36,16 @@ class QueryParser : ANTLRErrorListener {
             }
             throw QueryParsingException(sb.toString())
         }
+
+        selects.forEach { select ->
+            val listener = QueryListener(query)
+            val text = query.substring(select.start.startIndex, select.stop.stopIndex + 1)
+
+            ParseTreeWalker.DEFAULT.walk(listener, select)
+            result.add(Query(text, listener.tableName, listener.tableAlias, listener.filter, listener.distinct))
+        }
+
+        return result.toList()
     }
 
     override fun syntaxError(

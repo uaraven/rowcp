@@ -15,12 +15,15 @@ class DataCopier(
 
     fun copyData() {
         log(V_NORMAL, "Starting data transfer")
-        val query = parser.parseQuery(args.getQuery())
-        val dataNode = retriever.collectDataToCopy(query)
-        log(V_NORMAL, "Retrieved @|yellow ${dataNode.size()}|@ rows")
-        log(V_NORMAL, "Mapping rows to target database")
-        val mappedNode = mapper.mapToTarget(dataNode)
-        writer.writeData(mappedNode)
-        log(V_NORMAL, "@|green Done|@")
+        val queries = parser.parseQuery(args.getQuery())
+        queries.forEach { query ->
+            log(V_NORMAL, "Seed query @|blue ${query.text}|@")
+            val dataNode = retriever.collectDataToCopy(query)
+            log(V_NORMAL, "Retrieved @|yellow ${dataNode.size()}|@ rows")
+            log(V_NORMAL, "Mapping rows to target database")
+            val mappedNode = mapper.mapToTarget(dataNode)
+            writer.writeData(mappedNode)
+            log(V_NORMAL, "@|green Done|@")
+        }
     }
 }

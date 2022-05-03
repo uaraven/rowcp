@@ -8,8 +8,10 @@ internal class QueryParserTest {
     @Test
     internal fun testParseSimpleQuery() {
         val parser = QueryParser()
-        val q = parser.parseQuery("SELECT * FROM Table")
+        val ql = parser.parseQuery("SELECT * FROM Table")
 
+        assertThat(ql).hasSize(1)
+        val q = ql[0]
         assertThat(q.table).isEqualTo("Table")
         assertThat(q.filter).isEqualTo("")
         assertThat(q.selectDistinct).isFalse
@@ -18,7 +20,10 @@ internal class QueryParserTest {
     @Test
     internal fun testParseQueryWithWhere() {
         val parser = QueryParser()
-        val q = parser.parseQuery("SELECT * FROM Table WHERE Table.A = 10 AND (b = 20 OR C LIKE 'Text%')")
+        val ql = parser.parseQuery("SELECT * FROM Table WHERE Table.A = 10 AND (b = 20 OR C LIKE 'Text%')")
+
+        assertThat(ql).hasSize(1)
+        val q = ql[0]
 
         assertThat(q.table).isEqualTo("Table")
         assertThat(q.filter).isEqualTo("Table.A = 10 AND (b = 20 OR C LIKE 'Text%')")
@@ -28,7 +33,10 @@ internal class QueryParserTest {
     @Test
     internal fun testParseQueryWithWhereAndDistinct() {
         val parser = QueryParser()
-        val q = parser.parseQuery("SELECT distinct * FROM Table WHERE Table.A = 10 AND (b = 20 OR C LIKE 'Text%')")
+        val ql = parser.parseQuery("SELECT distinct * FROM Table WHERE Table.A = 10 AND (b = 20 OR C LIKE 'Text%')")
+
+        assertThat(ql).hasSize(1)
+        val q = ql[0]
 
         assertThat(q.table).isEqualTo("Table")
         assertThat(q.filter).isEqualTo("Table.A = 10 AND (b = 20 OR C LIKE 'Text%')")
@@ -38,12 +46,37 @@ internal class QueryParserTest {
     @Test
     internal fun testParseQueryWithTableAlias() {
         val parser = QueryParser()
-        val q = parser.parseQuery("SELECT distinct * FROM Table T1 WHERE T1.A = 10 AND (b = 20 OR C LIKE 'Text%')")
+        val ql = parser.parseQuery("SELECT distinct * FROM Table T1 WHERE T1.A = 10 AND (b = 20 OR C LIKE 'Text%')")
+
+        assertThat(ql).hasSize(1)
+        val q = ql[0]
 
         assertThat(q.table).isEqualTo("Table")
         assertThat(q.alias).isEqualTo("T1")
         assertThat(q.filter).isEqualTo("T1.A = 10 AND (b = 20 OR C LIKE 'Text%')")
         assertThat(q.selectDistinct).isTrue
+    }
+
+    @Test
+    internal fun testParseMultipleQueries() {
+        val parser = QueryParser()
+        val ql = parser.parseQuery(
+            "SELECT * FROM Table WHERE Table.A = 10 AND (b = 20 OR C LIKE 'Text%');\n"
+                    + "SELECT * FROM Table2 T2 WHERE T2.Age < 80\n"
+        )
+
+        assertThat(ql).hasSize(2)
+        val q1 = ql[0]
+
+        assertThat(q1.table).isEqualTo("Table")
+        assertThat(q1.filter).isEqualTo("Table.A = 10 AND (b = 20 OR C LIKE 'Text%')")
+        assertThat(q1.selectDistinct).isFalse
+
+        val q2 = ql[1]
+
+        assertThat(q2.table).isEqualTo("Table2")
+        assertThat(q2.filter).isEqualTo("T2.Age < 80")
+        assertThat(q2.selectDistinct).isFalse
     }
 
     @Test
