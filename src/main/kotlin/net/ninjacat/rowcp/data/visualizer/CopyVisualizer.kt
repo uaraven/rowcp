@@ -38,11 +38,14 @@ class CopyVisualizer(
     fun showCopyTree() {
 
         processedRelationships = mutableSetOf()
-        val query = parser.parseQuery(args.getQuery())
+        val queries = parser.parseQuery(args.getQuery())
 
-        val root = walk(query.table, WalkDirection.BOTH)
-        val text = print(root, 0)
-        log(V_NORMAL, text)
+        queries.forEach { query ->
+            log(V_NORMAL, "Seed query: @|blue ${query.text}|@")
+            val root = walk(query.table, WalkDirection.BOTH)
+            val text = print(root, 0)
+            log(V_NORMAL, text)
+        }
     }
 
     private fun walk(tableName: String, walkDirection: WalkDirection): TreeTable {

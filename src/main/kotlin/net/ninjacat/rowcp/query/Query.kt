@@ -1,6 +1,12 @@
 package net.ninjacat.rowcp.query
 
-data class Query(val table: String, val alias: String?, val filter: String, val selectDistinct: Boolean) {
+data class Query(
+    val text: String,
+    val table: String,
+    val alias: String?,
+    val filter: String,
+    val selectDistinct: Boolean
+) {
     /**
      * Returns table name with optional alias
      */

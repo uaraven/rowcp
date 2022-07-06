@@ -23,7 +23,7 @@ internal class DataRetrieverTest : BaseDatabaseTest() {
     internal fun testRetrieveFromTop() {
         val dataRetriever = DataRetriever(args, schema)
 
-        val query = QueryParser().parseQuery("SELECT * FROM main WHERE id = 1")
+        val query = QueryParser().parseQuery("SELECT * FROM main WHERE id = 1")[0]
 
         val data = dataRetriever.collectDataToCopy(query)
 
@@ -60,7 +60,7 @@ internal class DataRetrieverTest : BaseDatabaseTest() {
     internal fun testRetrieveFromBottom() {
         val dataRetriever = DataRetriever(args, schema)
 
-        val query = QueryParser().parseQuery("SELECT * FROM child WHERE first = 'first 4'")
+        val query = QueryParser().parseQuery("SELECT * FROM child WHERE first = 'first 4'")[0]
 
         val data = dataRetriever.collectDataToCopy(query)
 
@@ -94,7 +94,7 @@ internal class DataRetrieverTest : BaseDatabaseTest() {
     internal fun testRetrieveFromMiddle() {
         val dataRetriever = DataRetriever(args, schema)
 
-        val query = QueryParser().parseQuery("SELECT * FROM intermediate WHERE id = 4")
+        val query = QueryParser().parseQuery("SELECT * FROM intermediate WHERE id = 4")[0]
 
         val data = dataRetriever.collectDataToCopy(query)
 
