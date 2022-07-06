@@ -4,11 +4,11 @@ grammar Rsql;
 package net.ninjacat.rowcp;
 }
 
-query: (selectStatement ';'?)+ EOF;
+query: (selectStatement ';')* selectStatement ';'? EOF;
 
 where: K_WHERE anything;
 
-anything: .*?;
+anything: (~';')*?;
 
 distinct: K_DISTINCT;
 

@@ -24,8 +24,6 @@ class QueryParser : ANTLRErrorListener {
         val result = mutableListOf<Query>()
         val q = parser.query()
 
-        val selects = q.selectStatement()
-
         if (errors.isNotEmpty()) {
             val sb = StringBuilder()
             with(sb) {
@@ -36,6 +34,8 @@ class QueryParser : ANTLRErrorListener {
             }
             throw QueryParsingException(sb.toString())
         }
+
+        val selects = q.selectStatement()
 
         selects.forEach { select ->
             val listener = QueryListener(query)
