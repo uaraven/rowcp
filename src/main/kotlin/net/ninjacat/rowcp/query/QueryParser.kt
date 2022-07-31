@@ -32,7 +32,7 @@ class QueryParser : ANTLRErrorListener {
                     append(msg).append("\n")
                 }
             }
-            throw QueryParsingException(sb.toString())
+            throw QueryParsingException("$sb\nQuery:\n$query")
         }
 
         val selects = q.selectStatement()
