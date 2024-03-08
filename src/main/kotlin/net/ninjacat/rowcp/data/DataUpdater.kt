@@ -1,7 +1,11 @@
 package net.ninjacat.rowcp.data
 
-import net.ninjacat.rowcp.*
+import net.ninjacat.rowcp.Args
+import net.ninjacat.rowcp.V_NORMAL
+import net.ninjacat.rowcp.V_SQL
+import net.ninjacat.rowcp.V_VERBOSE
 import net.ninjacat.rowcp.data.Utils.use
+import net.ninjacat.rowcp.log
 import java.sql.PreparedStatement
 
 data class RowUpdate(val statement: String, val data: DataRow, val update: Boolean) {
@@ -92,11 +96,9 @@ class DataUpdater(private val args: Args, schema: DbSchema) : DataWriter {
             }
         }
     }
-
-    override fun writeData(startingNode: DataNode) {
+    override fun writeData(startingNode: DataNode, append: Boolean) {
         val updates = prepareUpdates(startingNode)
         log(V_VERBOSE, "Preparing to run @|yellow ${updates.size}|@ INSERT/UPDATE statements")
         runUpdates(updates)
     }
 }
-

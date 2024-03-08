@@ -1,7 +1,11 @@
 package net.ninjacat.rowcp.data
 
-import net.ninjacat.rowcp.*
+import net.ninjacat.rowcp.Args
+import net.ninjacat.rowcp.V_NORMAL
+import net.ninjacat.rowcp.V_SQL
+import net.ninjacat.rowcp.V_VERBOSE
 import net.ninjacat.rowcp.data.sql.SqlSupport
+import net.ninjacat.rowcp.log
 
 data class InsertBatch(val statement: String, val data: List<DataRow>)
 
@@ -77,11 +81,9 @@ class DataInserter(private val args: Args, schema: DbSchema) : DataWriter {
             statement.close()
         }
     }
-
-    override fun writeData(startingNode: DataNode) {
+    override fun writeData(startingNode: DataNode, append: Boolean) {
         val batches = prepareBatches(startingNode)
         log(V_VERBOSE, "Preparing to run @|yellow ${batches.size}|@ INSERT batches")
         runBatches(batches)
     }
 }
-

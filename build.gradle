@@ -17,13 +17,13 @@ repositories {
 }
 
 ext {
-    antlrVersion = '4.10.1'
-    jansiVersion = '2.4.0'
+    antlrVersion = '4.13.1'
+    jansiVersion = '2.4.1'
     jcommanderVersion = '1.82'
-    mariaDbVersion = '3.0.5'
-    postgresVersion = '42.3.6'
+    mariaDbVersion = '3.3.1'
+    postgresVersion = '42.7.1'
     h2Version = '1.4.200'
-    mysqlVersion = '8.0.29'
+    mysqlVersion = '8.0.33'
 }
 
 dependencies {
@@ -41,7 +41,9 @@ dependencies {
     implementation "com.h2database:h2:$h2Version"
     implementation "mysql:mysql-connector-java:$mysqlVersion"
 
-    implementation 'ch.qos.logback:logback-classic:1.2.11'
+    implementation 'com.amazonaws.secretsmanager:aws-secretsmanager-jdbc:2.0.0'
+
+    implementation 'ch.qos.logback:logback-classic:1.4.14'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.2'

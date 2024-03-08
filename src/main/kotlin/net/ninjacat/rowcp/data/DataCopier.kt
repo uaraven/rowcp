@@ -16,13 +16,15 @@ class DataCopier(
     fun copyData() {
         log(V_NORMAL, "Starting data transfer")
         val queries = parser.parseQuery(args.getQuery())
+        var append = false
         queries.forEach { query ->
             log(V_NORMAL, "Seed query @|blue ${query.text}|@")
             val dataNode = retriever.collectDataToCopy(query)
             log(V_NORMAL, "Retrieved @|yellow ${dataNode.size()}|@ rows")
             log(V_NORMAL, "Mapping rows to target database")
             val mappedNode = mapper.mapToTarget(dataNode)
-            writer.writeData(mappedNode)
+            writer.writeData(mappedNode, append)
+            append = true
             log(V_NORMAL, "@|green Done|@")
         }
     }

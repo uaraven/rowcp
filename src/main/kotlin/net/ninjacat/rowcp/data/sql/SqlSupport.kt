@@ -63,7 +63,12 @@ interface SqlSupport {
         private val defaultDriver = DefaultSqlSupport()
 
         fun getSqlSupport(jdbcUrl: String): SqlSupport {
-            return when (getJdbcDriver(jdbcUrl)) {
+            val url = if (jdbcUrl.startsWith("jdbc-secretsmanager")) {
+                jdbcUrl.replace("jdbc-secretsmanager", "jdbc")
+            } else {
+                jdbcUrl
+            }
+            return when (getJdbcDriver(url)) {
                 "postgresql" -> postgresDriver
                 "mysql", "mariadb", "h2" -> mariaDriver
                 else -> defaultDriver
@@ -71,4 +76,3 @@ interface SqlSupport {
         }
     }
 }
-

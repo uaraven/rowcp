@@ -8,25 +8,34 @@ object Utils {
         if (jdbcUrl.startsWith("file:")) {
             return
         }
-        if (!jdbcUrl.startsWith("jdbc:")) {
+        if (!isJdbcUrl(jdbcUrl)) {
             throw RuntimeException("Invalid JDBC connection string: @|yellow $jdbcUrl")
         }
-        val driver = when (val scheme = URI.create(jdbcUrl.substring(5)).scheme) {
+        val driver = when (val scheme = getJdbcScheme(jdbcUrl)) {
             "mariadb" -> "org.mariadb.jdbc.Driver"
             "mysql" -> "com.mysql.cj.jdbc.Driver"
             "postgresql" -> "org.postgresql.Driver"
+            "jdbc-secretsmanager" -> "com.amazonaws.secretsmanager.sql.AWSSecretsManagerMariaDBDriver"
             "h2" -> "org.h2.Driver"
             else -> throw RuntimeException("JDBC scheme $scheme is not supported")
         }
         Class.forName(driver)
     }
 
+    private fun getJdbcScheme(jdbcUrl: String): String? = if (jdbcUrl.startsWith("jdbc:")) {
+        URI.create(jdbcUrl.substring(5)).scheme
+    } else {
+        jdbcUrl.substring(0, jdbcUrl.indexOf(':'))
+    }
+
     fun getJdbcDriver(jdbcUrl: String): String {
-        if (!jdbcUrl.startsWith("jdbc:")) {
+        if (!isJdbcUrl(jdbcUrl)) {
             throw RuntimeException("Invalid JDBC connection string: @|yellow $jdbcUrl")
         }
-        return URI.create(jdbcUrl.substring(5)).scheme
+        return getJdbcScheme(jdbcUrl)!!
     }
+
+    private fun isJdbcUrl(jdbcUrl: String) = jdbcUrl.startsWith("jdbc:") or jdbcUrl.startsWith("jdbc-secretsmanager")
 
     fun <T : AutoCloseable, R> T.use(block: T.() -> R): R {
         try {

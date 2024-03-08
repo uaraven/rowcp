@@ -28,8 +28,7 @@ import java.io.PrintStream
 class SqlWriter(targetUrl: String) : DataWriter {
 
     private val fileName = targetUrl.substring(5)
-
-    override fun writeData(startingNode: DataNode) {
+    override fun writeData(startingNode: DataNode, append: Boolean) {
         val updates = prepareUpdates(startingNode)
 
         val printer =
@@ -37,7 +36,7 @@ class SqlWriter(targetUrl: String) : DataWriter {
                 System.out
             } else {
                 log(V_NORMAL, "Writing SQL statements into @|blue ${fileName}|@")
-                PrintStream(FileOutputStream(File(fileName)))
+                PrintStream(FileOutputStream(File(fileName), append))
             }
 
         updates.forEach { printer.println(it) }
@@ -59,5 +58,3 @@ class SqlWriter(targetUrl: String) : DataWriter {
         return beforeUpdates + updates + afterUpdates
     }
 }
-
-
