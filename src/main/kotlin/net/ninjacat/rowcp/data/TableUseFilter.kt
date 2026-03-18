@@ -22,5 +22,5 @@ class TableUseFilter(private val tableNames: Iterable<String>) : TableFilter {
 
     private val patterns = tableNames.map { Pattern.compile(it) }
 
-    override fun shouldSkip(tableName: String): Boolean = patterns.any { pattern -> !pattern.matcher(tableName).matches() }
+    override fun shouldSkip(tableName: String): Boolean = patterns.none { pattern -> pattern.matcher(tableName).matches() }
 }
