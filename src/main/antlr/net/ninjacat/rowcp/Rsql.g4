@@ -1,9 +1,5 @@
 grammar Rsql;
 
-@header {
-package net.ninjacat.rowcp;
-}
-
 query: (selectStatement ';')* selectStatement ';'? EOF;
 
 where: K_WHERE anything;
