@@ -20,7 +20,6 @@ import net.ninjacat.rowcp.Args
 import net.ninjacat.rowcp.V_NORMAL
 import net.ninjacat.rowcp.data.DbSchema
 import net.ninjacat.rowcp.data.Relationship
-import net.ninjacat.rowcp.data.TableFilter
 import net.ninjacat.rowcp.data.TableSkipFilter
 import net.ninjacat.rowcp.data.TableUseFilter
 import net.ninjacat.rowcp.data.WalkDirection
@@ -35,11 +34,8 @@ class CopyVisualizer(
     private val schema: DbSchema
 ) {
     lateinit var processedRelationships: MutableSet<Relationship>
-    private val tableFilter = if (args.tablesToUse.isNotEmpty()) {
-        TableUseFilter(args.tablesToUse)
-    } else {
-        TableSkipFilter(args.tablesToSkip)
-    }
+    private val tableSkipFilter = TableSkipFilter(args.tablesToSkip)
+    private val tableOnlyFilter = TableUseFilter(args.tablesToUse)
 
     fun showCopyTree() {
 
@@ -63,10 +59,12 @@ class CopyVisualizer(
                     val parentNode = schemaGraph.tables[it.sourceTable]!!
                     return@flatMap if (!processedRelationships.contains(it)) { // skip this relationship if we've seen it
                         processedRelationships.add(it)
-                        if (tableFilter.shouldSkip(it.sourceTable)) {
+                        if (tableOnlyFilter.shouldInclude(it.sourceTable)) {
+                            listOf(walk(parentNode.name, WalkDirection.PARENTS))
+                        } else if (tableSkipFilter.shouldSkip(it.sourceTable)) {
                             listOf()
                         } else {
-                            listOf(walk(parentNode.name, WalkDirection.PARENTS))
+                            listOf()
                         }
                     } else {
                         listOf()
@@ -79,7 +77,7 @@ class CopyVisualizer(
                     val childNode = schemaGraph.tables[it.targetTable]!!
                     return@flatMap if (!processedRelationships.contains(it)) { // skip this relationship if we've seen it
                         processedRelationships.add(it)
-                        if (tableFilter.shouldSkip(it.targetTable)) {
+                        if (tableSkipFilter.shouldSkip(it.targetTable)) {
                             listOf()
                         } else {
                             listOf(walk(childNode.name, walkDirection))

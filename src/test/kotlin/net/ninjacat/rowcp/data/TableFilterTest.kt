@@ -47,39 +47,45 @@ internal class TableSkipFilterTest {
 internal class TableUseFilterTest {
 
     @Test
-    fun `should not skip table that is in the allowlist`() {
+    fun `should include table that is in the allowlist`() {
         val filter = TableUseFilter(listOf("orders", "payments"))
-        assertThat(filter.shouldSkip("orders")).isFalse()
+        assertThat(filter.shouldInclude("orders")).isTrue()
     }
 
     @Test
-    fun `should skip table not in the allowlist`() {
+    fun `should not include table not in the allowlist`() {
         val filter = TableUseFilter(listOf("orders", "payments"))
-        assertThat(filter.shouldSkip("users")).isTrue()
+        assertThat(filter.shouldInclude("users")).isFalse()
     }
 
     @Test
-    fun `should not skip table matching regex pattern`() {
+    fun `should include table matching regex pattern`() {
         val filter = TableUseFilter(listOf("order_.*"))
-        assertThat(filter.shouldSkip("order_items")).isFalse()
+        assertThat(filter.shouldInclude("order_items")).isTrue()
     }
 
     @Test
-    fun `should skip table not matching regex pattern`() {
+    fun `should not include table not matching regex pattern`() {
         val filter = TableUseFilter(listOf("order_.*"))
-        assertThat(filter.shouldSkip("users")).isTrue()
+        assertThat(filter.shouldInclude("users")).isFalse()
     }
 
     @Test
-    fun `should not skip table matching any of multiple patterns`() {
+    fun `should include table matching any of multiple patterns`() {
         val filter = TableUseFilter(listOf("orders", "payment_.*"))
-        assertThat(filter.shouldSkip("orders")).isFalse()
-        assertThat(filter.shouldSkip("payment_log")).isFalse()
+        assertThat(filter.shouldInclude("orders")).isTrue()
+        assertThat(filter.shouldInclude("payment_log")).isTrue()
     }
 
     @Test
-    fun `should skip table not matching any of multiple patterns`() {
+    fun `should not include table not matching any of multiple patterns`() {
         val filter = TableUseFilter(listOf("orders", "payment_.*"))
-        assertThat(filter.shouldSkip("users")).isTrue()
+        assertThat(filter.shouldInclude("users")).isFalse()
+    }
+
+    @Test
+    fun `should include any table when list is empty`() {
+        val filter = TableUseFilter(emptyList())
+        assertThat(filter.shouldInclude("any_table")).isTrue()
     }
 }

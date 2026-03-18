@@ -6,18 +6,18 @@
 
     <groupId>net.ninjacat.rowcp</groupId>
     <artifactId>rowcp</artifactId>
-    <version>0.7.0</version>
+    <version>0.7.1</version>
     <packaging>jar</packaging>
 
     <properties>
         <kotlin.version>2.3.20</kotlin.version>
-        <antlr.version>4.13.1</antlr.version>
-        <jansi.version>2.4.1</jansi.version>
+        <antlr.version>4.13.2</antlr.version>
+        <jansi.version>2.4.2</jansi.version>
         <jcommander.version>1.82</jcommander.version>
-        <mariadb.version>3.3.3</mariadb.version>
-        <postgres.version>42.7.3</postgres.version>
+        <mariadb.version>3.5.7</mariadb.version>
+        <postgres.version>42.7.10</postgres.version>
         <h2.version>1.4.200</h2.version>
-        <mysql.version>8.0.33</mysql.version>
+        <mysql.version>9.6.0</mysql.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -74,8 +74,8 @@
             <version>${h2.version}</version>
         </dependency>
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
             <version>${mysql.version}</version>
         </dependency>
 
@@ -83,45 +83,45 @@
         <dependency>
             <groupId>com.amazonaws.secretsmanager</groupId>
             <artifactId>aws-secretsmanager-jdbc</artifactId>
-            <version>2.0.2</version>
+            <version>2.0.4</version>
         </dependency>
 
         <!-- Logging -->
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <version>1.5.6</version>
+            <version>1.5.32</version>
         </dependency>
 
         <!-- Test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.10.2</version>
+            <version>5.14.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.10.2</version>
+            <version>5.14.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
-            <version>3.26.0</version>
+            <version>3.27.7</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.liquibase</groupId>
             <artifactId>liquibase-core</artifactId>
-            <version>4.27.0</version>
+            <version>4.33.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.mockk</groupId>
             <artifactId>mockk-jvm</artifactId>
-            <version>1.13.10</version>
+            <version>1.14.9</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -155,7 +155,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.5.0</version>
+                <version>3.6.1</version>
                 <executions>
                     <execution>
                         <id>add-antlr-sources</id>
@@ -224,14 +224,14 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.2.5</version>
+                <version>3.5.5</version>
             </plugin>
 
             <!-- Shade plugin: equivalent to Gradle shadow, produces fat jar -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.5.3</version>
+                <version>3.6.2</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -241,10 +241,12 @@
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>net.ninjacat.rowcp.AppKt</mainClass>
                                 </transformer>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer
+                                        implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                             </transformers>
                         </configuration>
                     </execution>

@@ -54,11 +54,9 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
     lateinit var preparedRows: MutableSet<DataRow>
     private val schemaGraph: SchemaGraph = schema.getSchemaGraph()
     private val chunkSize = params.chunkSize
-    private val tableFilter = if (params.tablesToUse.isNotEmpty()) {
-        TableUseFilter(params.tablesToUse)
-    } else {
-        TableSkipFilter(params.tablesToSkip)
-    }
+    private val onlyTableFilter = TableUseFilter(params.tablesToUse)
+    private val skipTableFilter = TableSkipFilter(params.tablesToSkip)
+
 
     fun collectDataToCopy(query: Query): DataNode {
         sourceConnection = schema.connection
@@ -91,12 +89,14 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
                     return@flatMap if (!processedRelationships.contains(it)) { // skip this relationship if we've seen it
                         log(V_VERBOSE, "Processing relationship @|cyan ${node.name}|@ <- @|blue ${parentNode.name}|@")
                         processedRelationships.add(it)
-                        if (tableFilter.shouldSkip(it.sourceTable)) {
+                        if (onlyTableFilter.shouldInclude(it.sourceTable)) {
+                            val query = buildParentQuery(it, rows)
+                            listOf(walk(parentNode, query, WalkDirection.PARENTS))
+                        } else if (skipTableFilter.shouldSkip(it.sourceTable)) {
                             log(V_NORMAL, "Skipping table @|yellow ${it.sourceTable}|@")
                             listOf()
                         } else {
-                            val query = buildParentQuery(it, rows)
-                            listOf(walk(parentNode, query, WalkDirection.PARENTS))
+                            listOf()
                         }
                     } else {
                         listOf()
@@ -110,7 +110,7 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
                     return@flatMap if (!processedRelationships.contains(it)) { // skip this relationship if we've seen it
                         log(V_VERBOSE, "Processing relationship @|blue ${node.name}|@ -> @|cyan ${childNode.name}|@")
                         processedRelationships.add(it)
-                        if (tableFilter.shouldSkip(it.targetTable)) {
+                        if (skipTableFilter.shouldSkip(it.targetTable)) {
                             log(V_NORMAL, "Skipping table @|yellow ${it.targetTable}|@")
                             listOf()
                         } else {

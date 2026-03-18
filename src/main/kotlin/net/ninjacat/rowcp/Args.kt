@@ -55,7 +55,7 @@ class Args {
     @Parameter(names = ["--skip-tables"], description = "Comma-separated list of source tables to be ignored")
     var skipSourceTables: String? = null
 
-    @Parameter(names = ["--only-tables"], description = "Comma-separated list of source tables to be used. All other tables will be ignored, unless pulled in by foreign key. This parameter overrides --skip-tables")
+    @Parameter(names = ["--only-tables"], description = "Comma-separated list of source tables to be used. All other tables will be ignored, unless pulled in by foreign key. Even if this is specified,  --skip-tables will still be applied to target tables")
     var onlyTables: String? = null
 
     @Parameter(names = ["--skip-unknown-columns"], description = "Ignore columns that do not exist in target database")
