@@ -18,6 +18,9 @@ package net.ninjacat.rowcp.data
 
 import java.util.regex.Pattern
 
-interface TableFilter{
-    fun shouldSkip(tableName: String): Boolean
+class TableUseFilter(private val tableNames: Iterable<String>) : TableFilter {
+
+    private val patterns = tableNames.map { Pattern.compile(it) }
+
+    override fun shouldSkip(tableName: String): Boolean = patterns.any { pattern -> !pattern.matcher(tableName).matches() }
 }

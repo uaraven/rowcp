@@ -27,9 +27,11 @@ data class SelectQuery(val select: String, val filters: List<String>, val parame
         filters.isEmpty() -> {
             listOf(Pair(select, listOf()))
         }
+
         parameters.isEmpty() -> {
             filters.map { Pair("$select $it", listOf()) }
         }
+
         else -> {
             filters.zip(parameters).map { (filter, param) -> Pair("$select $filter", param) }
         }
@@ -52,7 +54,11 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
     lateinit var preparedRows: MutableSet<DataRow>
     private val schemaGraph: SchemaGraph = schema.getSchemaGraph()
     private val chunkSize = params.chunkSize
-    private val tableFilter = TableFilter(params.tablesToSkip)
+    private val tableFilter = if (params.tablesToUse.isNotEmpty()) {
+        TableUseFilter(params.tablesToUse)
+    } else {
+        TableSkipFilter(params.tablesToSkip)
+    }
 
     fun collectDataToCopy(query: Query): DataNode {
         sourceConnection = schema.connection
@@ -111,11 +117,11 @@ class DataRetriever(params: Args, private val schema: DbSchema) {
                             val query = buildChildQuery(it, rows)
                             listOf(walk(childNode, query, walkDirection))
                         }
-                } else {
-                    listOf()
+                    } else {
+                        listOf()
+                    }
                 }
-            }
-        } else listOf()
+            } else listOf()
         return DataNode(node.name, rows, before, after)
     }
 

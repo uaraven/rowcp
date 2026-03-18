@@ -21,6 +21,8 @@ import net.ninjacat.rowcp.V_NORMAL
 import net.ninjacat.rowcp.data.DbSchema
 import net.ninjacat.rowcp.data.Relationship
 import net.ninjacat.rowcp.data.TableFilter
+import net.ninjacat.rowcp.data.TableSkipFilter
+import net.ninjacat.rowcp.data.TableUseFilter
 import net.ninjacat.rowcp.data.WalkDirection
 import net.ninjacat.rowcp.log
 import net.ninjacat.rowcp.query.QueryParser
@@ -33,7 +35,11 @@ class CopyVisualizer(
     private val schema: DbSchema
 ) {
     lateinit var processedRelationships: MutableSet<Relationship>
-    private val tableFilter = TableFilter(args.tablesToSkip)
+    private val tableFilter = if (args.tablesToUse.isNotEmpty()) {
+        TableUseFilter(args.tablesToUse)
+    } else {
+        TableSkipFilter(args.tablesToSkip)
+    }
 
     fun showCopyTree() {
 
