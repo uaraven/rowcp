@@ -6,11 +6,11 @@
 
     <groupId>net.ninjacat.rowcp</groupId>
     <artifactId>rowcp</artifactId>
-    <version>0.6.2</version>
+    <version>0.7.0</version>
     <packaging>jar</packaging>
 
     <properties>
-        <kotlin.version>1.9.23</kotlin.version>
+        <kotlin.version>2.3.20</kotlin.version>
         <antlr.version>4.13.1</antlr.version>
         <jansi.version>2.4.1</jansi.version>
         <jcommander.version>1.82</jcommander.version>
@@ -35,7 +35,7 @@
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-serialization-json</artifactId>
-            <version>1.6.3</version>
+            <version>1.10.0</version>
         </dependency>
 
         <!-- ANTLR -->

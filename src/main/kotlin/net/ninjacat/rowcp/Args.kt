@@ -55,6 +55,9 @@ class Args {
     @Parameter(names = ["--skip-tables"], description = "Comma-separated list of source tables to be ignored")
     var skipSourceTables: String? = null
 
+    @Parameter(names = ["--only-tables"], description = "Comma-separated list of source tables to be used. All other tables will be ignored, unless pulled in by foreign key. This parameter overrides --skip-tables")
+    var onlyTables: String? = null
+
     @Parameter(names = ["--skip-unknown-columns"], description = "Ignore columns that do not exist in target database")
     var skipMissingColumns = false
 
@@ -94,6 +97,8 @@ class Args {
 
     val tablesToSkip: Set<String> by lazy { skipSourceTables?.split(",")?.map { it.lowercase() }?.toSet() ?: setOf() }
 
+    val tablesToUse: Set<String> by lazy { onlyTables?.split(",")?.map { it.lowercase() }?.toSet() ?: setOf() }
+
     val schemaCacheControl: SchemaCacheControl? by lazy {
         if (schemaCache == null) null else SchemaCacheControl.parse(
             schemaCache!!
@@ -113,6 +118,7 @@ class Args {
         }
         log(V_NORMAL, "@|yellow --verbose =|@ @|cyan ${verbosity}|@")
         log(V_NORMAL, "@|yellow --skip-tables =|@ @|cyan ${skipSourceTables}|@")
+        log(V_NORMAL, "@|yellow --only-tables =|@ @|cyan ${onlyTables}|@")
         log(V_NORMAL, "@|yellow --skip-unknown-columns =|@ @|cyan ${skipMissingColumns}|@")
         log(V_NORMAL, "@|yellow --chunk-size =|@ @|cyan ${chunkSize}|@")
         log(V_NORMAL, "@|yellow --dry-run =|@ @|cyan ${dryRun}|@")
